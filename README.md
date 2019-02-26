@@ -32,8 +32,8 @@ All the interfaces share the same underlying communication protocol
 The communication protocol consists of the following format:
 
 **Overall the protocol has the following format:**
-`{bytes}{CRC16}{end of input character}`
 
+`{bytes}{CRC16}{end of input character}`
 - **bytes** the actual bytes being sent to the device, generally speaking this is the *"command"*
 - **CRC16** common CRC protocol with many implementations online
 - **end of input character** character signaling the end of input
@@ -55,6 +55,7 @@ Multiple documents exist listing possible commands
 The CRC is used is the [CRC16 XMODEM](https://pycrc.org/models.html#xmodem) variation
 
 **Background**
+
 Multiple methods exist to [generate CRC](https://en.wikipedia.org/wiki/Computation_of_cyclic_redundancy_checks).
 
 CRC16 as the name implies contains 16 bits or 2 bytes of data.
@@ -66,6 +67,7 @@ Two hexadecimal character represent a single byte so given the example above.
 `0xAD` is the second byte
 
 **Exception**
+
 The **Reserved characters** are not allowed in the CRC.
 It appears the device simply expects them to be incremented by 1
 
@@ -124,6 +126,7 @@ os.read(fd, 512)
 ```
 
 **Avoiding the need for root**
+
 Make use of [**udev**](https://wiki.debian.org/udev) to specify more broad access:
 
 ```bash
