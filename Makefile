@@ -1,5 +1,6 @@
 # define the C compiler to use
 CC = gcc
+CHECK=checkmk
 
 # define any compile-time flags
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wmissing-prototypes -Wshadow -O3 -flto -fomit-frame-pointer
@@ -7,7 +8,7 @@ CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wmissing-prototypes -Wshadow -O3 -flt
 # define any directories containing header files other than /usr/include
 #
 IDIR = include
-INCLUDES = -I$(IDIR)/*.h
+INCLUDES = -I$(IDIR)
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
@@ -22,6 +23,9 @@ LIBS = #-lmylib -lm
 # define the C source files
 SDIR = src
 SRCS = $(wildcard $(SDIR)/*.c)
+
+TDIR = tst
+TSTS = $(wildcard $(TDIR)/*.check)
 
 # define the C object files 
 #
@@ -42,7 +46,7 @@ MAIN = voltroniclib
 # deleting dependencies appended to the file from 'make depend'
 #
 
-.PHONY: depend clean
+.PHONY: depend clean test
 
 default: $(MAIN)
 
@@ -55,6 +59,9 @@ $(MAIN): $(OBJS)
 # (see the gnu make manual section about automatic variables)
 .c.o:
 		$(CC) $(CFLAGS) $(INCLUDES) -c $<  -o $@
+
+test:
+		$(CHECK) 
 
 clean:
 		$(RM) $(OBJS) *~ $(MAIN)
