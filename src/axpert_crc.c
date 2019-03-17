@@ -1,9 +1,9 @@
 #include "axpert_crc.h"
 
+#define IS_AXPERT_SPECIAL_CHARACTER(_ch_) ((0x28 == (_ch_)) || (0x0d == (_ch_)) || (0x0a == (_ch_)))
 #define AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS 1
 #define AXPERT_CRC_LOW_BYTE(_uint_) (_uint_ & 0xff)
 #define AXPERT_CRC_HIGH_BYTE(_uint_) ((_uint_ >> 8) & 0xff)
-#define IS_AXPERT_SPECIAL_CHARACTER(_ch_) ((0x28 == (_ch_)) || (0x0d == (_ch_)) || (0x0a == (_ch_)))
 
 #if defined(AXPERT_CRC_USE_TABLE_METHOD) && (AXPERT_CRC_USE_TABLE_METHOD > 0)
 
@@ -45,45 +45,50 @@
 #endif
 
 axpert_crc_t calculate_axpert_crc(const char* buffer, size_t buffer_length) {
-    axpert_crc_t crc = 0;
+  axpert_crc_t crc = 0;
 
-    if ((0 == buffer) || (0 >= buffer_length)) {
-        return crc;
-    }
+  if ((buffer == 0) || (buffer_length <= 0)) {
+    return crc;
+  }
 
-    #if defined(AXPERT_CRC_USE_TABLE_METHOD) && (AXPERT_CRC_USE_TABLE_METHOD > 0)
+  #if defined(AXPERT_CRC_USE_TABLE_METHOD) && (AXPERT_CRC_USE_TABLE_METHOD > 0)
 
-      do {
-          const int table_index = ((crc >> 8) ^ *buffer) & 0xff;
-          crc = (xmodem_crc_table[table_index] ^ (crc << 8)) & 0xffff;
-          buffer += sizeof(char);
-      } while(--buffer_length);
+    do {
+      const int table_index = ((crc >> 8) ^ *buffer) & 0xff;
+      crc = (xmodem_crc_table[table_index] ^ (crc << 8)) & 0xffff;
+      buffer += sizeof(char);
+    } while(--buffer_length);
 
-    #else
-      #warning "Using computationally slower bit-by-bit CRC16 method"
+  #else
+    #warning "Using computationally slower bit-by-bit CRC16 method"
 
-      do {
-        const char current_byte = *buffer;
-        for(unsigned int index = 0x80; index > 0; index >>= 1) {
-            int bit = !!(crc & 0x8000);
+    do {
+      const char current_byte = *buffer;
+      for(unsigned int index = 0x80; index > 0; index >>= 1) {
+        int bit = !!(crc & 0x8000);
 
-            if (current_byte & index) {
-                bit = !bit;
-            }
-
-            crc <<= 1;
-            if (bit) {
-                crc ^= 0x1021;
-            }
+        if (current_byte & index) {
+          bit = !bit;
         }
-        crc &= 0xffff;
-        buffer += sizeof(char);
-      } while(--buffer_length);
 
-    #endif
+        crc <<= 1;
+        if (bit) {
+          crc ^= 0x1021;
+        }
+      }
+      crc &= 0xffff;
+      buffer += sizeof(char);
+    } while(--buffer_length);
 
-    if (AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS) { // Validate no special characters exist in CRC
-      axpert_crc_t current_byte;
+  #endif
+
+  #if defined(AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS) && (AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS > 0)
+    if (AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS) {
+      #if defined(_WIN32) || defined(WIN32)
+        unsigned __int8 current_byte;
+      #else
+        uint_fast8_t current_byte;
+      #endif
 
       current_byte = AXPERT_CRC_LOW_BYTE(crc);
       if (IS_AXPERT_SPECIAL_CHARACTER(current_byte)) {
@@ -95,6 +100,7 @@ axpert_crc_t calculate_axpert_crc(const char* buffer, size_t buffer_length) {
         crc += 256;
       }
     }
+  #endif
 
-    return crc;
+  return crc;
 }

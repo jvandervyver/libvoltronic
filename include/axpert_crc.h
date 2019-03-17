@@ -16,7 +16,7 @@
   /**
    * Switch to bit-by-bit CRC16 calculation algorithm instead of a table driven algorithm
    *
-   * This will save 4KiB of program space at the cost of computation time
+   * This will save 4KiB of program space at the cost of some computation time
    */
   #define AXPERT_CRC_USE_TABLE_METHOD    1
 
