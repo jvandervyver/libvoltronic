@@ -1,13 +1,11 @@
-#include "axpert_crc.h"
+#include "voltronic_crc.h"
 
-#define IS_AXPERT_SPECIAL_CHARACTER(_ch_) ((0x28 == (_ch_)) || (0x0d == (_ch_)) || (0x0a == (_ch_)))
-#define AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS 1
-#define AXPERT_CRC_LOW_BYTE(_uint_) (_uint_ & 0xff)
-#define AXPERT_CRC_HIGH_BYTE(_uint_) ((_uint_ >> 8) & 0xff)
+#define IS_VOLTRONIC_SPECIAL_CHARACTER(_ch_) ((0x28 == (_ch_)) || (0x0d == (_ch_)) || (0x0a == (_ch_)))
+#define VOLTRONIC_INCREMENT_ON_SPECIAL_CHARACTERS 1
 
-#if defined(AXPERT_CRC_USE_TABLE_METHOD) && (AXPERT_CRC_USE_TABLE_METHOD > 0)
+#if defined(VOLTRONIC_CRC_USE_TABLE_METHOD) && (VOLTRONIC_CRC_USE_TABLE_METHOD > 0)
 
-  static const axpert_crc_t xmodem_crc_table[256] = {
+  static const voltronic_crc_t xmodem_crc_table[256] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
     0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
     0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
@@ -44,14 +42,14 @@
 
 #endif
 
-axpert_crc_t calculate_axpert_crc(const char* buffer, size_t buffer_length) {
-  axpert_crc_t crc = 0;
+voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length) {
+  voltronic_crc_t crc = 0;
 
   if ((buffer == 0) || (buffer_length <= 0)) {
     return crc;
   }
 
-  #if defined(AXPERT_CRC_USE_TABLE_METHOD) && (AXPERT_CRC_USE_TABLE_METHOD > 0)
+  #if defined(VOLTRONIC_CRC_USE_TABLE_METHOD) && (VOLTRONIC_CRC_USE_TABLE_METHOD > 0)
 
     do {
       const int table_index = ((crc >> 8) ^ *buffer) & 0xff;
@@ -82,22 +80,20 @@ axpert_crc_t calculate_axpert_crc(const char* buffer, size_t buffer_length) {
 
   #endif
 
-  #if defined(AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS) && (AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS > 0)
-    if (AXPERT_INCREMENT_ON_SPECIAL_CHARACTERS) {
+  #if defined(VOLTRONIC_INCREMENT_ON_SPECIAL_CHARACTERS) && (VOLTRONIC_INCREMENT_ON_SPECIAL_CHARACTERS > 0)
+    if (1) {
       #if defined(_WIN32) || defined(WIN32)
-        unsigned __int8 current_byte;
+        unsigned __int8* byte_pointer = (unsigned __int8*) &crc;
       #else
-        uint_fast8_t current_byte;
+        uint_fast8_t* byte_pointer = (uint_fast8_t*) &crc;
       #endif
 
-      current_byte = AXPERT_CRC_LOW_BYTE(crc);
-      if (IS_AXPERT_SPECIAL_CHARACTER(current_byte)) {
-        crc += 1;
-      }
+      for(unsigned int count = 0; count < sizeof(voltronic_crc_t); ++count) {
+        if (IS_VOLTRONIC_SPECIAL_CHARACTER(*byte_pointer)) {
+          *byte_pointer += 1;
+        }
 
-      current_byte = AXPERT_CRC_HIGH_BYTE(crc);
-      if (IS_AXPERT_SPECIAL_CHARACTER(current_byte)) {
-        crc += 256;
+        ++byte_pointer;
       }
     }
   #endif

@@ -1,19 +1,20 @@
-#include "axpert_dev.h"
+#include "voltronic_dev.h"
+#include "voltronic_dev_impl.h"
 #include <stdlib.h>
 #include <string.h>
 
-struct axpert_dev_struct_t {
+struct voltronic_dev_struct_t {
   void* impl_ptr;
-  const axpert_dev_read_f read;
-  const axpert_dev_write_f write;
-  const axpert_dev_close_f close;
+  const voltronic_dev_read_f read;
+  const voltronic_dev_write_f write;
+  const voltronic_dev_close_f close;
 };
 
-axpert_dev_t axpert_dev_create(
+voltronic_dev_t voltronic_dev_create(
     void* impl_ptr,
-    const axpert_dev_read_f read_function,
-    const axpert_dev_write_f write_function,
-    const axpert_dev_close_f close_function) {
+    const voltronic_dev_read_f read_function,
+    const voltronic_dev_write_f write_function,
+    const voltronic_dev_close_f close_function) {
 
   do {
     if (impl_ptr == 0) break;
@@ -21,16 +22,16 @@ axpert_dev_t axpert_dev_create(
     if (write_function == 0) break;
     if (close_function == 0) break;
 
-    const axpert_dev_t dev = malloc(sizeof(struct axpert_dev_struct_t));
+    const voltronic_dev_t dev = malloc(sizeof(struct voltronic_dev_struct_t));
     if (dev == 0) break;
 
-    const struct axpert_dev_struct_t dev_struct = {
+    const struct voltronic_dev_struct_t dev_struct = {
       impl_ptr,
       read_function,
       write_function,
       close_function };
 
-    memcpy(dev, &dev_struct , sizeof(struct axpert_dev_struct_t));
+    memcpy(dev, &dev_struct , sizeof(struct voltronic_dev_struct_t));
 
     return dev;
   } while(0);
@@ -38,9 +39,9 @@ axpert_dev_t axpert_dev_create(
   return 0;
 }
 
-int axpert_dev_read(const axpert_dev_t dev, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds) {
+int voltronic_dev_read(const voltronic_dev_t dev, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds) {
   if (dev != 0) {
-    const axpert_dev_read_f read_function = dev->read;
+    const voltronic_dev_read_f read_function = dev->read;
     if (read_function != 0) {
       void* impl_ptr = dev->impl_ptr;
       if ((impl_ptr != 0) && (buffer != 0) && (buffer_size > 0)) {
@@ -52,9 +53,9 @@ int axpert_dev_read(const axpert_dev_t dev, char* buffer, const size_t buffer_si
   return -1;
 }
 
-int axpert_dev_write(const axpert_dev_t dev, const char* buffer, const size_t buffer_size) {
+int voltronic_dev_write(const voltronic_dev_t dev, const char* buffer, const size_t buffer_size) {
   if (dev != 0) {
-    const axpert_dev_write_f write_function = dev->write;
+    const voltronic_dev_write_f write_function = dev->write;
     if (write_function != 0) {
       void* impl_ptr = dev->impl_ptr;
       if ((impl_ptr != 0) && (buffer != 0) && (buffer_size > 0)) {
@@ -66,9 +67,9 @@ int axpert_dev_write(const axpert_dev_t dev, const char* buffer, const size_t bu
   return -1;
 }
 
-int axpert_dev_close(axpert_dev_t dev) {
+int voltronic_dev_close(voltronic_dev_t dev) {
   if (dev != 0) {
-    const axpert_dev_close_f close_function = dev->close;
+    const voltronic_dev_close_f close_function = dev->close;
     if (close_function != 0) {
       void* impl_ptr = dev->impl_ptr;
       if (impl_ptr != 0) {

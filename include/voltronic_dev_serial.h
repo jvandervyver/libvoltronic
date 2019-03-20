@@ -1,7 +1,7 @@
-#ifndef __AXPERT__DEV__SERIAL__H__
-#define __AXPERT__DEV__SERIAL__H__
+#ifndef __VOLTRONIC__DEV__SERIAL__H__
+#define __VOLTRONIC__DEV__SERIAL__H__
 
-  #include "axpert_dev.h"
+  #include "voltronic_dev.h"
 
   #if defined(_WIN32) || defined(WIN32)
     #include <Windows.h>
@@ -35,7 +35,7 @@
     SERIAL_PARITY_SPACE
   } serial_parity_t;
 
-  axpert_dev_t axpert_serial_create(
+  voltronic_dev_t voltronic_serial_create(
       const char* name,
       const baud_rate_t baud_rate,
       const data_bits_t data_bits,
