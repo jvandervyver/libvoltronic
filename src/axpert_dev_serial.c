@@ -6,7 +6,7 @@
 #define AXPERT_DEV_SP(_impl_ptr_) ((struct sp_port*) (_impl_ptr_))
 
 static int axpert_dev_serial_free(char** serial_ports, int size);
-static int axpert_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size);
+static int axpert_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds);
 static int axpert_dev_serial_write(void* impl_ptr, const char* buffer, const size_t buffer_size);
 static int axpert_dev_serial_close(void* impl_ptr);
 static int axpert_dev_serial_configure(
@@ -99,9 +99,9 @@ char** axpert_serial_list() {
   return result;
 }
 
-static int axpert_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size) {
+static int axpert_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds) {
   if (impl_ptr != 0) {
-    return sp_nonblocking_read(AXPERT_DEV_SP(impl_ptr), buffer, buffer_size);
+    return sp_blocking_read_next(AXPERT_DEV_SP(impl_ptr), buffer, buffer_size, timeout_milliseconds);
   } else {
     return -1;
   }

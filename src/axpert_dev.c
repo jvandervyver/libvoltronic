@@ -38,15 +38,13 @@ axpert_dev_t axpert_dev_create(
   return 0;
 }
 
-int axpert_dev_read(const axpert_dev_t dev, char* buffer, const size_t buffer_size) {
+int axpert_dev_read(const axpert_dev_t dev, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds) {
   if (dev != 0) {
     const axpert_dev_read_f read_function = dev->read;
     if (read_function != 0) {
       void* impl_ptr = dev->impl_ptr;
-      if (impl_ptr != 0) {
-        if (buffer != 0) {
-          return read_function(impl_ptr, buffer, buffer_size);
-        }
+      if ((impl_ptr != 0) && (buffer != 0) && (buffer_size > 0)) {
+        return read_function(impl_ptr, buffer, buffer_size, timeout_milliseconds);
       }
     }
   }
@@ -59,10 +57,8 @@ int axpert_dev_write(const axpert_dev_t dev, const char* buffer, const size_t bu
     const axpert_dev_write_f write_function = dev->write;
     if (write_function != 0) {
       void* impl_ptr = dev->impl_ptr;
-      if (impl_ptr != 0) {
-        if (buffer != 0) {
-          return write_function(impl_ptr, buffer, buffer_size);
-        }
+      if ((impl_ptr != 0) && (buffer != 0) && (buffer_size > 0)) {
+        return write_function(impl_ptr, buffer, buffer_size);
       }
     }
   }
