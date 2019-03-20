@@ -8,6 +8,4 @@
     const unsigned int product_id,
     const char* serial_number);
 
-  //int axpert_usb_close(axpert_dev_t dev);
-
 #endif

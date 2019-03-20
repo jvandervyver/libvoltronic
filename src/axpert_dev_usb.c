@@ -9,24 +9,19 @@
   #include <stdint.h>
 #endif
 
-typedef enum {
-  HIDAPI_ENSURE_INIT,
-  HIDAPI_ENSURE_EXIT
-} hidapi_library_state_t;
-
 #define AXPERT_DEV_USB(_impl_ptr_) ((hid_device*) (_impl_ptr_))
 
+static inline void axpert_usb_init_hidapi();
 static int axpert_dev_usb_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds);
 static int axpert_dev_usb_write(void* impl_ptr, const char* buffer, const size_t buffer_size);
 static int axpert_dev_usb_close(void* impl_ptr);
-static inline void hidapi_bootstrap_state();
 
 axpert_dev_t axpert_usb_create(
     const unsigned int vendor_id,
     const unsigned int product_id,
     const char* serial_number) {
 
-  hidapi_bootstrap_state(HIDAPI_ENSURE_INIT);
+  axpert_usb_init_hidapi();
 
   hid_device* hid_device = hid_open(vendor_id, product_id, 0);
   if (hid_device != 0) {
@@ -71,24 +66,21 @@ static int axpert_dev_usb_close(void* impl_ptr) {
   return -1;
 }
 
-static inline void hidapi_bootstrap_state(hidapi_library_state_t desired_state) {
+static inline void axpert_usb_exit_hidapi() {
+  hid_exit();
+}
+
+static inline void axpert_usb_init_hidapi() {
   #if defined(_WIN32) || defined(WIN32)
-    static unsigned __int8 hidapi_init_state_set = 0;
+    static unsigned __int8 hidapi_init_complete = 0;
   #else
-    static uint_fast8_t hidapi_init_state_set = 0;
+    static uint_fast8_t hidapi_init_complete = 0;
   #endif
 
-  if (hidapi_init_state_set == 0) {
-    if (desired_state == HIDAPI_ENSURE_INIT) {
-      if (hid_init() == 0) {
-        hidapi_init_state_set = 1;
-      }
-    }
-  } else {
-    if (desired_state == HIDAPI_ENSURE_EXIT) {
-      if (hid_exit() == 0) {
-        hidapi_init_state_set = 0;
-      }
+  if (hidapi_init_complete == 0) {
+    if (hid_init() == 0) {
+      atexit(axpert_usb_exit_hidapi);
+      hidapi_init_complete = 1;
     }
   }
 }
