@@ -5,10 +5,10 @@
 
 #define AXPERT_DEV_SP(_impl_ptr_) ((struct sp_port*) (_impl_ptr_))
 
-static int axpert_dev_serial_free(char** serial_ports, int size);
 static int axpert_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds);
 static int axpert_dev_serial_write(void* impl_ptr, const char* buffer, const size_t buffer_size);
 static int axpert_dev_serial_close(void* impl_ptr);
+
 static int axpert_dev_serial_configure(
     void* impl_ptr,
     const baud_rate_t baud_rate,
@@ -50,53 +50,6 @@ axpert_dev_t axpert_serial_create(
   sp_free_port(AXPERT_DEV_SP(impl_ptr));
 
   return 0;
-}
-
-int axpert_serial_free(char** list) {
-  return axpert_dev_serial_free(list, -1);
-}
-
-char** axpert_serial_list() {
-  struct sp_port **serial_ports;
-
-  const enum sp_return list_ports_result = sp_list_ports(&serial_ports);
-  unsigned int serial_ports_size = 0;
-  if (list_ports_result == SP_OK) {
-    for(; serial_ports[serial_ports_size]; ++serial_ports_size) {
-    }
-  } else {
-    return 0;
-  }
-
-  if (serial_ports_size <= 0) {
-    sp_free_port_list(serial_ports);
-    return 0;
-  }
-
-  char** result = malloc(sizeof(char*) * (serial_ports_size + 1));
-  result[serial_ports_size] = 0;
-
-  for(unsigned int index = 0; index < serial_ports_size; ++index) {
-    const char* serial_port_name = sp_get_port_name(serial_ports[index]);
-    if (serial_port_name == 0) {
-      axpert_dev_serial_free(result, serial_ports_size);
-      sp_free_port_list(serial_ports);
-      return 0;
-    }
-
-    const size_t length = strlen(serial_port_name);
-    if (length > 0) {
-      char* copy = (result[index] = malloc(sizeof(char) * (length + 1)));
-      memcpy(copy, serial_port_name, length);
-      copy[length] = 0;
-    } else {
-      result[index] = malloc(sizeof(char));
-      result[index] = 0;
-    }
-  }
-
-  sp_free_port_list(serial_ports);
-  return result;
 }
 
 static int axpert_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds) {
@@ -193,28 +146,4 @@ static int axpert_dev_serial_configure(
 
   sp_free_config(config_ptr);
   return result;
-}
-
-static int axpert_dev_serial_free(char** serial_ports, int size) {
-  if (serial_ports != 0) {
-    int index = -1;
-    char* cstring;
-
-    if (size > 0) {
-      while(--size) {
-        cstring = serial_ports[++index];
-        if (cstring != 0) {
-          free(cstring);
-        }
-      }
-    } else {
-      while((cstring = serial_ports[++index])) {
-        free(cstring);
-      }      
-    }
-
-    free(serial_ports);
-  }
-
-  return 1;
 }

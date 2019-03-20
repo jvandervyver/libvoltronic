@@ -5,13 +5,13 @@
 
   #if defined(_WIN32) || defined(WIN32)
     #include <Windows.h>
+
+    typedef unsigned __int32 baud_rate_t;
   #else
     #include <stdint.h>
+
+    typedef uint_fast32_t baud_rate_t;
   #endif
-
-  char** axpert_serial_list(void);
-
-  int axpert_serial_free(char** list);
 
   typedef enum {
     DATA_BITS_FIVE,
@@ -34,12 +34,6 @@
     SERIAL_PARITY_MARK,
     SERIAL_PARITY_SPACE
   } serial_parity_t;
-
-  #if defined(_WIN32) || defined(WIN32)
-    typedef unsigned __int32 baud_rate_t;
-  #else
-    typedef uint_fast32_t baud_rate_t;
-  #endif
 
   axpert_dev_t axpert_serial_create(
       const char* name,

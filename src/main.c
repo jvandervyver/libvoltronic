@@ -6,14 +6,6 @@
 #include <string.h>
 
 int main() {
-  char** serial_ports = axpert_serial_list();
-  for(unsigned int index = 0; serial_ports[index]; ++index) {
-    if (strcmp("/dev/usbserial", serial_ports[index]) == 0) {
-      printf("Found usbserial\n");
-    }
-  }
-
-  axpert_serial_free(serial_ports);
 
   //axpert_dev_t dev = axpert_serial_create("/dev/tty.usbserial", 2400, DATA_BITS_EIGHT, STOP_BITS_ONE, SERIAL_PARITY_NONE);
   axpert_dev_t dev = axpert_usb_create(0x0665, 0x5161, 0);
