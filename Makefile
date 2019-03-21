@@ -8,46 +8,16 @@ CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wmissing-prototypes -Wshadow -O3 -flt
 # define any directories containing header files other than /usr/include
 #
 IDIR = include
-INCLUDES = -I$(IDIR) -Ilib/libhidapi/hidapi/
-
-# define library paths in addition to /usr/lib
-#   if I wanted to include libraries not in /usr/lib I'd specify
-#   their path using -Lpath, something like:
-LFLAGS = -Llib/libserialport/
+INCLUDES = -I$(IDIR) -Ilib/libserialport/ -Ilib/libhidapi/hidapi/
 
 # define any libraries to link into executable:
 #   if I want to link in libraries (libx.so or libx.a) I use the -llibname 
 #   option, something like (this will link in libmylib.so and libm.so:
-LIBS = -lserialport
-
-ifeq '$(findstring ;,$(PATH))' ';'
-	detected_OS := Windows
-else
-	detected_OS := $(shell uname 2>/dev/null || echo Unknown)
-	detected_OS := $(patsubst CYGWIN%,Cygwin,$(detected_OS))
-	detected_OS := $(patsubst MSYS%,MSYS,$(detected_OS))
-	detected_OS := $(patsubst MINGW%,MSYS,$(detected_OS))
-endif
-
-ifeq ($(detected_OS),Windows)
-	HIDAPI_DIR = lib/libhidapi/windows
-else ifeq ($(detected_OS),Darwin)
-	HIDAPI_DIR = lib/libhidapi/mac
-	LFLAGS += -framework IOKit -framework CoreFoundation
-else ifeq ($(detected_OS),FreeBSD)
-	HIDAPI_DIR = lib/libhidapi/libusb
-else ifeq ($(detected_OS),NetBSD)
-    HIDAPI_DIR = lib/libhidapi/libusb
-else ifeq ($(detected_OS),DragonFly)
-    HIDAPI_DIR = lib/libhidapi/libusb
-else
-	HIDAPI_DIR = lib/libhidapi/linux
-endif
+LIBS = -lserialport -lhidapi
 
 # define the C source files
 SDIR = src
-SRCS =	$(wildcard $(SDIR)/*.c) \
-		$(HIDAPI_DIR)/hid.c
+SRCS = $(wildcard $(SDIR)/*.c)
 
 TDIR = tst
 TSTS = $(wildcard $(TDIR)/*.check)
@@ -76,7 +46,7 @@ MAIN = voltroniclib
 default: $(MAIN)
 
 $(MAIN): $(OBJS) 
-		$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
+		$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LIBS)
 
 # this is a suffix replacement rule for building .o's from .c's
 # it uses automatic variables $<: the name of the prerequisite of
