@@ -2,8 +2,13 @@
 #include "voltronic_dev.h"
 #include "voltronic_dev_serial.h"
 #include "voltronic_dev_usb.h"
+#include "voltronic_interface.h"
+#include "time_util.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
+
+static const char command[] = "QPIGS";
 
 int main() {
 
@@ -14,31 +19,15 @@ int main() {
     return 1;
   }
 
-  voltronic_dev_write(dev, "\r", 1);
-  printf("Written, waiting for output\n");
-  char buffer[64];
-  char* buff_ptr = buffer;
-  int bytes_read = 0;
-  int loop_done = 0;
-  while((loop_done == 0) && (bytes_read < sizeof(buffer))) {
-    int loop_bytes = voltronic_dev_read(dev, buff_ptr, sizeof(buffer) - (bytes_read + 1), 2000);
-    if (loop_bytes > 0) {
-      for(unsigned int count = 0; count < loop_bytes; ++count) {
-        ++bytes_read;
-        if (*buff_ptr == '\r') {
-          loop_done = 1;
-          break;
-        }
-        buff_ptr += sizeof(char);
-      }
-    }
+  char buffer[128];
+  memset(buffer, 0, sizeof(buffer));
+  char* buffer_ptr = buffer;
+  int result = voltronic_execute_command(dev, command, strlen(command), buffer, sizeof(buffer), 1000);
+  if (result > 0) {
+    printf("Success on command %s, got %s\n", command, buffer);
+  } else {
+    printf("Failed to execute %s\n", command);
   }
 
-  *buff_ptr = 0;
-  printf("%s\n", buffer);
-
-  if (voltronic_dev_close(dev) > 0) {
-    printf("Serial port closed\n");
-    return 0;
-  }
+  voltronic_dev_close(dev);
 }

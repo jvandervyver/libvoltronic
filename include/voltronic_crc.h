@@ -10,7 +10,7 @@
   #else
     #include <stdint.h>
 
-    typedef uint_fast16_t voltronic_crc_t;
+    typedef uint16_t voltronic_crc_t;
   #endif
 
   /**
@@ -19,6 +19,9 @@
    * This will save 4KiB of program space at the cost of some computation time
    */
   #define VOLTRONIC_CRC_USE_TABLE_METHOD    1
+
+  int write_voltronic_crc(const voltronic_crc_t crc, char* buffer, const size_t buffer_length);
+  voltronic_crc_t read_voltronic_crc(const char* buffer, const size_t buffer_length);
 
   voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length);
 

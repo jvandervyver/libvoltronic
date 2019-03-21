@@ -1,7 +1,41 @@
 #include "voltronic_crc.h"
 
+#if defined(_WIN32) || defined(WIN32)
+  #include <Windows.h>
+#else
+  #include <stdint.h>
+#endif
+
+int write_voltronic_crc(const voltronic_crc_t crc, char* buffer, const size_t buffer_length) {
+  if ((buffer == 0) || (buffer_length <= sizeof(voltronic_crc_t))) {
+    return 0;
+  }
+
+  buffer[0] = crc & 0xff;
+  buffer[1] = (crc >> 8) & 0xff;
+
+  return 1;
+}
+
+voltronic_crc_t read_voltronic_crc(const char* buffer, const size_t buffer_length) {
+  if ((buffer == 0) || (buffer_length < sizeof(voltronic_crc_t))) {
+    return 0;
+  }
+
+  voltronic_crc_t crc = 0;
+
+  #if defined(_WIN32) || defined(WIN32)
+    crc |= ((unsigned __int8) buffer[0]) << 8;
+    crc |= ((unsigned __int8) buffer[1]);
+  #else
+    crc |= ((uint8_t) buffer[0]) << 8;
+    crc |= ((uint8_t) buffer[1]);
+  #endif
+
+  return crc;
+}
+
 #define IS_VOLTRONIC_SPECIAL_CHARACTER(_ch_) ((0x28 == (_ch_)) || (0x0d == (_ch_)) || (0x0a == (_ch_)))
-#define VOLTRONIC_INCREMENT_ON_SPECIAL_CHARACTERS 1
 
 #if defined(VOLTRONIC_CRC_USE_TABLE_METHOD) && (VOLTRONIC_CRC_USE_TABLE_METHOD > 0)
 
@@ -54,7 +88,7 @@ voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length
     do {
       const int table_index = ((crc >> 8) ^ *buffer) & 0xff;
       crc = (xmodem_crc_table[table_index] ^ (crc << 8)) & 0xffff;
-      buffer += sizeof(char);
+      ++buffer;
     } while(--buffer_length);
 
   #else
@@ -75,28 +109,26 @@ voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length
         }
       }
       crc &= 0xffff;
-      buffer += sizeof(char);
+      ++buffer;
     } while(--buffer_length);
 
   #endif
 
-  #if defined(VOLTRONIC_INCREMENT_ON_SPECIAL_CHARACTERS) && (VOLTRONIC_INCREMENT_ON_SPECIAL_CHARACTERS > 0)
-    if (1) {
-      #if defined(_WIN32) || defined(WIN32)
-        unsigned __int8* byte_pointer = (unsigned __int8*) &crc;
-      #else
-        uint_fast8_t* byte_pointer = (uint_fast8_t*) &crc;
-      #endif
-
-      for(unsigned int count = 0; count < sizeof(voltronic_crc_t); ++count) {
-        if (IS_VOLTRONIC_SPECIAL_CHARACTER(*byte_pointer)) {
-          *byte_pointer += 1;
-        }
-
-        ++byte_pointer;
-      }
-    }
+  #if defined(_WIN32) || defined(WIN32)
+    unsigned __int8 byte;
+  #else
+    uint8_t byte;
   #endif
+
+  byte = crc & 0xff;
+  if (IS_VOLTRONIC_SPECIAL_CHARACTER(byte)) {
+    crc += 1;
+  }
+
+  byte = (crc >> 8) & 0xff;
+  if (IS_VOLTRONIC_SPECIAL_CHARACTER(byte)) {
+    crc += 256;
+  }
 
   return crc;
 }

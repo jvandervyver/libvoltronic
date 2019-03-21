@@ -112,7 +112,7 @@ static inline void voltronic_usb_init_hidapi() {
   #if defined(_WIN32) || defined(WIN32)
     static unsigned __int8 hidapi_init_complete = 0;
   #else
-    static uint_fast8_t hidapi_init_complete = 0;
+    static uint8_t hidapi_init_complete = 0;
   #endif
 
   if (hidapi_init_complete == 0) {
