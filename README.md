@@ -8,21 +8,6 @@ That means if you want to use this library you can, provided your source code is
 
 **I will not take lightly any use of this implementation in ANY closed source software**
 
-### Comment about the license & community
-
-The aim of this library is to enable.
-I want anyone and everyone that wants to enable to themselves be enabled.
-
-Everything here was written from scratch with no help from any of the code bases.
-The only source of information I used was [AEVA Forums](http://forums.aeva.asn.au/viewtopic.php?t=4332)
-
-Especially the invaluable protocol & initial implementation of the CRC provided by *coulomb*.
-It should not be understated the impact this individual has had on the Voltronic device community.
-
-Although the initial implementation was invaluable it should be pointed out that I re-implemented that code with other implementations.
-Not because I dislike the original author, think the implementation is bad or I'm some sort of uber coder.
-CRC is a widely researched problem and many public implementations exist with more tuned performance trade-off characteristics that suited my implementation better.
-
 ## Description
 Devices from Voltronic are shipped with 4 possible hardware interfaces: RS232, USB, Bluetooth & RS485
 
