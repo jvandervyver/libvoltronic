@@ -90,9 +90,10 @@ Nothing special to mention here, synchronous protocol with the following configu
 The device makes use of an [HID interface](https://en.wikipedia.org/wiki/USB_human_interface_device_class).
 In Linux the device is presented as a [*HIDRaw* device](https://www.kernel.org/doc/Documentation/hid/hidraw.txt)
 
-It is **not** a USB->Serial converter requiring a *special driver*
+It is **not** a USB->Serial
 
 So in Linux for example:
+
 **Ruby:**
 ```ruby
 fd = File.open('/dev/hidraw0', IO::RDWR|IO::NONBLOCK) # May need root, or make the file 666 using udev rules
