@@ -6,8 +6,17 @@
 
 #define VOLTRONIC_DEV_SP(_impl_ptr_) ((struct sp_port*) (_impl_ptr_))
 
-static int voltronic_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds);
-static int voltronic_dev_serial_write(void* impl_ptr, const char* buffer, const size_t buffer_size);
+static int voltronic_dev_serial_read(
+  void* impl_ptr,
+  char* buffer,
+  const size_t buffer_size,
+  const unsigned long timeout_milliseconds);
+
+static int voltronic_dev_serial_write(
+  void* impl_ptr,
+  const char* buffer,
+  const size_t buffer_size);
+
 static int voltronic_dev_serial_close(void* impl_ptr);
 
 static int voltronic_dev_serial_configure(
@@ -47,23 +56,42 @@ voltronic_dev_t voltronic_serial_create(
       &voltronic_dev_serial_read,
       &voltronic_dev_serial_write,
       &voltronic_dev_serial_close);
+
   } while(0);
   sp_free_port(VOLTRONIC_DEV_SP(impl_ptr));
 
   return 0;
 }
 
-static int voltronic_dev_serial_read(void* impl_ptr, char* buffer, const size_t buffer_size, const unsigned long timeout_milliseconds) {
+static int voltronic_dev_serial_read(
+    void* impl_ptr,
+    char* buffer,
+    const size_t buffer_size,
+    const unsigned long timeout_milliseconds) {
+
   if (impl_ptr != 0) {
-    return sp_blocking_read_next(VOLTRONIC_DEV_SP(impl_ptr), buffer, buffer_size, timeout_milliseconds);
+    return sp_blocking_read_next(
+      VOLTRONIC_DEV_SP(impl_ptr),
+      buffer,
+      buffer_size,
+      timeout_milliseconds);
+
   } else {
     return -1;
   }
 }
 
-static int voltronic_dev_serial_write(void* impl_ptr, const char* buffer, const size_t buffer_size) {
+static int voltronic_dev_serial_write(
+    void* impl_ptr,
+    const char* buffer,
+    const size_t buffer_size) {
+
   if (impl_ptr != 0) {
-    return sp_nonblocking_write(VOLTRONIC_DEV_SP(impl_ptr), buffer, buffer_size);
+    return sp_nonblocking_write(
+      VOLTRONIC_DEV_SP(impl_ptr),
+      buffer,
+      buffer_size);
+
   } else {
     return -1;
   }
@@ -107,7 +135,9 @@ static inline int voltronic_dev_stop_bits(const stop_bits_t stop_bits) {
   return -1;
 }
 
-static inline enum sp_parity voltronic_dev_serial_parity(const serial_parity_t parity) {
+static inline enum sp_parity voltronic_dev_serial_parity(
+    const serial_parity_t parity) {
+
   switch(parity){
     case SERIAL_PARITY_NONE: return SP_PARITY_NONE;
     case SERIAL_PARITY_ODD: return SP_PARITY_ODD;

@@ -20,9 +20,17 @@
    */
   #define VOLTRONIC_CRC_USE_TABLE_METHOD    1
 
-  int write_voltronic_crc(const voltronic_crc_t crc, char* buffer, const size_t buffer_length);
-  voltronic_crc_t read_voltronic_crc(const char* buffer, const size_t buffer_length);
+  int write_voltronic_crc(
+    const voltronic_crc_t crc,
+    char* buffer,
+    const size_t buffer_length);
 
-  voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length);
+  voltronic_crc_t read_voltronic_crc(
+    const char* buffer,
+    const size_t buffer_length);
+
+  voltronic_crc_t calculate_voltronic_crc(
+    const char* buffer,
+    size_t buffer_length);
 
 #endif

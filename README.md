@@ -210,13 +210,19 @@ pkg install autoconf
 pkg install automake
 pkg install libtool
 pkg install libiconv
-pkg install makedepend
 pkg install gmake
 ```
 
 **gmake** instead of make to build
 
 ### Linux
+
+Required dependencies:
+
+**Ubuntu:**
+```sh
+apt-get install gcc git autoconf automake libtool pkg-config libusb-dev libusb-1.0-0-dev
+```
 
 **make** to build
 

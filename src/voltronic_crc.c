@@ -6,31 +6,33 @@
   #include <stdint.h>
 #endif
 
-int write_voltronic_crc(const voltronic_crc_t crc, char* buffer, const size_t buffer_length) {
+int write_voltronic_crc(
+    const voltronic_crc_t crc,
+    char* buffer,
+    const size_t buffer_length) {
+
   if ((buffer == 0) || (buffer_length <= sizeof(voltronic_crc_t))) {
     return 0;
   }
 
-  buffer[0] = crc & 0xff;
-  buffer[1] = (crc >> 8) & 0xff;
+  buffer[0] = (crc & 0xff);
+  buffer[1] = ((crc >> 8) & 0xff);
 
   return 1;
 }
 
-voltronic_crc_t read_voltronic_crc(const char* buffer, const size_t buffer_length) {
+voltronic_crc_t read_voltronic_crc(
+    const char* buffer,
+    const size_t buffer_length) {
+
   if ((buffer == 0) || (buffer_length < sizeof(voltronic_crc_t))) {
     return 0;
   }
 
   voltronic_crc_t crc = 0;
 
-  #if defined(_WIN32) || defined(WIN32)
-    crc |= ((unsigned __int8) buffer[0]) << 8;
-    crc |= ((unsigned __int8) buffer[1]);
-  #else
-    crc |= ((uint8_t) buffer[0]) << 8;
-    crc |= ((uint8_t) buffer[1]);
-  #endif
+  crc |= ((buffer[0] & 0xff) << 8);
+  crc |= (buffer[1] & 0xff);
 
   return crc;
 }
@@ -76,7 +78,10 @@ voltronic_crc_t read_voltronic_crc(const char* buffer, const size_t buffer_lengt
 
 #endif
 
-voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length) {
+voltronic_crc_t calculate_voltronic_crc(
+    const char* buffer,
+    size_t buffer_length) {
+
   voltronic_crc_t crc = 0;
 
   if ((buffer == 0) || (buffer_length <= 0)) {
@@ -86,8 +91,8 @@ voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length
   #if defined(VOLTRONIC_CRC_USE_TABLE_METHOD) && (VOLTRONIC_CRC_USE_TABLE_METHOD > 0)
 
     do {
-      const int table_index = ((crc >> 8) ^ *buffer) & 0xff;
-      crc = (xmodem_crc_table[table_index] ^ (crc << 8)) & 0xffff;
+      const int table_index = (((crc >> 8) ^ *buffer) & 0xff);
+      crc = ((xmodem_crc_table[table_index] ^ (crc << 8)) & 0xffff);
       ++buffer;
     } while(--buffer_length);
 
@@ -120,12 +125,12 @@ voltronic_crc_t calculate_voltronic_crc(const char* buffer, size_t buffer_length
     uint8_t byte;
   #endif
 
-  byte = crc & 0xff;
+  byte = (crc & 0xff);
   if (IS_VOLTRONIC_SPECIAL_CHARACTER(byte)) {
     crc += 1;
   }
 
-  byte = (crc >> 8) & 0xff;
+  byte = ((crc >> 8) & 0xff);
   if (IS_VOLTRONIC_SPECIAL_CHARACTER(byte)) {
     crc += 256;
   }
