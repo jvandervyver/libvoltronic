@@ -53,3 +53,5 @@ dkms.conf
 voltroniclib
 lib/libserialport/*
 lib/libhidapi/*
+obj/*
+
