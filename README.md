@@ -157,3 +157,68 @@ Especially USB & USB HID is complex and has significantly complex APIs that are 
 To remove a lot of the heavy lifting, the library relies:
 - [libserialport](https://sigrok.org/wiki/Libserialport)
 - [HIDAPI](https://github.com/signal11/hidapi)
+
+## Building
+
+### Dependencies
+
+**Install depedencies:**
+```sh
+cd lib
+pull_libhidapi.sh # requires git
+pull_libserialport.sh # requires git
+```
+
+**Build libserialport:**
+```sh
+cd libserialport/
+./autogen.sh
+./configure
+make
+make install # Requires sudo or run as su
+```
+
+**Build libhidapi:**
+```sh
+cd libhidapi/
+./bootstrap
+./configure
+make
+make install # Requires sudo or run as su
+```
+
+### OSX
+
+The library was developed & tested on OSX High Sierra but the system is setup as a dev machine.
+As such the complete list of dependencies have long since been forgotten.
+
+At the very least:
+- Homebrew
+- gcc
+- git
+
+**make** to build
+
+### FreeBSD
+
+Required dependencies:
+```sh
+pkg install gcc
+pkg install git
+pkg install autoconf
+pkg install automake
+pkg install libtool
+pkg install libiconv
+pkg install makedepend
+pkg install gmake
+```
+
+**gmake** instead of make to build
+
+### Linux
+
+**make** to build
+
+### Windows
+
+Unknown TBD
