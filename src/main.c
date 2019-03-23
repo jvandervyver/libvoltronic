@@ -1,6 +1,5 @@
 #include "voltronic_dev_serial.h"
 #include "voltronic_dev_usb.h"
-#include "voltronic_interface.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -18,7 +17,7 @@ int main() {
 
   char buffer[128];
   memset(buffer, 0, sizeof(buffer));
-  int result = voltronic_execute_command(dev, command, strlen(command), buffer, sizeof(buffer), 1000);
+  int result = voltronic_dev_execute(dev, command, strlen(command), buffer, sizeof(buffer), 1000);
   if (result > 0) {
     printf("Success on command %s, got %s\n", command, buffer);
   } else {

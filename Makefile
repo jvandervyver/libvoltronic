@@ -1,5 +1,6 @@
 # define the C compiler to use
 CC = gcc
+CP = cp -f
 
 # define any compile-time flags
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wmissing-prototypes -Wshadow -O3 -flto -fomit-frame-pointer
@@ -10,7 +11,7 @@ DEPS = $(wildcard $(IDIR)/*.h)
 
 # define any libraries
 LDIR = lib
-LIBS = -lserialport -lhidapi
+LIBS = -lserialport
 
 # add includes
 CFLAGS += -I$(IDIR) -Ilib/libserialport/ -Ilib/libhidapi/hidapi
@@ -23,21 +24,29 @@ SRCS = $(wildcard $(SDIR)/*.c)
 ODIR = obj
 OBJS = $(patsubst %,$(ODIR)/%,$(notdir $(SRCS:.c=.o)))
 
-#
-# The following part of the makefile is generic; it can be used to 
-# build any executable just by changing the definitions above and by
-# deleting dependencies appended to the file from 'make depend'
-#
+# Directives
 
-default: voltroniclib
+default: usb_default
+
+usb_default: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi
+	$(CP) $@ voltroniclib
+	$(RM) $@
+
+hidraw: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi-hidraw
+	$(CP) $@ voltroniclib
+	$(RM) $@
+
+libusb: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi-libusb
+	$(CP) $@ voltroniclib
+	$(RM) $@
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-voltroniclib: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
-
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/*.o *~ core $(INCDIR)/*~ 
+	$(RM) $(ODIR)/*.o *~ core voltroniclib $(INCDIR)/*~ 
