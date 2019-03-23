@@ -26,7 +26,7 @@ static int voltronic_dev_usb_write(
 
 static int voltronic_dev_usb_close(void* impl_ptr);
 
-static inline void voltronic_usb_init_hidapi();
+static inline void voltronic_usb_init_hidapi(void);
 
 static inline size_t voltronic_usb_wchar_size(
   const char* buffer,
