@@ -13,6 +13,66 @@ Devices from Voltronic are shipped with 4 possible hardware interfaces: RS232, U
 
 All the interfaces share the same underlying communication protocol
 
+## Usage
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+  voltronic_dev_t dev = // See examples for Serial & USB below
+
+  // Query the device
+  char buffer[128];
+  int result = voltronic_dev_execute(dev, command, strlen(command), buffer, sizeof(buffer), 1000);
+  if (result > 0) {
+    printf("Success on command %s, got %s\n", command, buffer);
+  } else {
+    printf("Failed to execute %s\n", command);
+  }
+
+  // Close the connection to the device
+  voltronic_dev_close(dev);
+}
+```
+
+### Serial
+```c
+#include "voltronic_dev_serial.h"
+
+int main() {
+  // Create a serial port dev
+  voltronic_dev_t dev = voltronic_serial_create(
+    "/dev/tty.usbserial", 2400, DATA_BITS_EIGHT, STOP_BITS_ONE, SERIAL_PARITY_NONE);
+
+  if (dev == 0) {
+    printf("Could not open serial port device\n");
+    return 1;
+  }
+
+  // See usage example above
+}
+```
+
+### USB
+```c
+#include "voltronic_dev_usb.h"
+
+int main() {
+  // Create a USB dev
+  const char* serial_number = 0; // Optional
+  voltronic_dev_t dev = voltronic_usb_create(0x0665, 0x5161, serial_number);
+
+  if (dev == 0) {
+    printf("Could not open USB device with serial number %s\n", serial_number);
+    return 1;
+  }
+
+  // See usage example above
+}
+```
+
 ## Communication protocol
 The communication protocol consists of the following format:
 
@@ -217,12 +277,28 @@ sudo yum clean all
 sudo yum install gcc git autoconf automake libtool pkg-config libudev-devel libusb1-devel
 ```
 
-**make hidraw** to build linking to HIDRaw **Recommended**
-**make libusb** to build linking to libusb
+**make** to build
 
 ### Windows
 
-Unknown TBD
+Built using Ubuntu and miniGW.  Building natively in Windows is a challenge for a better software developer than this author.
+
+**Using Ubuntu:**
+```sh
+sudo apt-get clean
+sudo apt-get update
+sudo apt-get install gcc git autoconf automake libtool pkg-config libudev-dev libusb-1.0-0-dev
+```
+
+### x86
+```sh
+sudo apt-get install gcc-mingw-w64-i686
+```
+
+### x64
+```sh
+sudo apt-get install gcc-mingw-w64-x86-64
+```
 
 ### OSX
 

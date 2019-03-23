@@ -11,7 +11,7 @@ DEPS = $(wildcard $(IDIR)/*.h)
 
 # define any libraries
 LDIR = lib
-LIBS = -lserialport
+LIBS =
 
 # add includes
 CFLAGS += -I$(IDIR) -Ilib/libserialport/ -Ilib/libhidapi/hidapi
@@ -26,10 +26,30 @@ OBJS = $(patsubst %,$(ODIR)/%,$(notdir $(SRCS:.c=.o)))
 
 # Directives
 
-default: usb_default
+default: no_default
+
+no_default:
+	@echo "Different compile options exist (ie. make serial)"
+	@echo "  serial - Serial port only"
+	@echo "  usb_default - USB support in Mac, Windows, FreeBSD"
+	@echo "  hidraw - USB support in Linux using hidraw"
+	@echo "  libusb - USB support using libUSB"
+	@echo "  serial_usb_default - serial & usb_default"
+	@echo "  serial_hidraw - serial & hidraw"
+	@echo "  serial_libusb - serial & libusb"
+
+serial: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport
+	$(CP) $@ voltroniclib
+	$(RM) $@
 
 usb_default: $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi
+	$(CP) $@ voltroniclib
+	$(RM) $@
+
+serial_usb_default: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport -lhidapi
 	$(CP) $@ voltroniclib
 	$(RM) $@
 
@@ -38,8 +58,18 @@ hidraw: $(OBJS)
 	$(CP) $@ voltroniclib
 	$(RM) $@
 
+serial_hidraw: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport -lhidapi-hidraw
+	$(CP) $@ voltroniclib
+	$(RM) $@
+
 libusb: $(OBJS)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi-libusb
+	$(CP) $@ voltroniclib
+	$(RM) $@
+
+serial_libusb: $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport -lhidapi-libusb
 	$(CP) $@ voltroniclib
 	$(RM) $@
 
