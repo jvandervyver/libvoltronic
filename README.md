@@ -164,15 +164,14 @@ To remove a lot of the heavy lifting, the library relies:
 ### Dependencies
 
 **Install depedencies:**
-```sh
-cd lib
-pull_libhidapi.sh # requires git
-pull_libserialport.sh # requires git
-```
+Each operating system will have a different list of prerequisites before the dependencies can be built.
+
+See a more detailed list below 
 
 **Build libserialport:**
 ```sh
-cd libserialport/
+git clone git://sigrok.org/libserialport lib/libserialport/
+cd lib/libserialport/
 ./autogen.sh
 ./configure
 make
@@ -181,12 +180,49 @@ make install # Requires sudo or run as su
 
 **Build libhidapi:**
 ```sh
-cd libhidapi/
+git clone https://github.com/signal11/hidapi.git lib/libhidapi/
+cd lib/libhidapi/
 ./bootstrap
 ./configure
 make
-make install # Requires sudo or run as su
+make install # Requires sudo or su
 ```
+
+### FreeBSD
+
+Tested on FreeBSD 10, 11, 12
+
+Required dependencies:
+```sh
+su
+pkg install gcc git autoconf automake libtool libiconv gmake
+```
+
+**gmake** instead of make to build
+
+### Linux
+
+Required dependencies:
+
+**Ubuntu:**
+```sh
+sudo apt-get clean
+sudo apt-get update
+sudo apt-get install gcc git autoconf automake libtool pkg-config libudev-dev libusb-1.0-0-dev
+```
+
+**Amazon Linux:**
+```sh
+sudo yum clean all
+sudo yum install gcc git autoconf automake libtool pkg-config libudev-devel libusb1-devel
+```
+
+**make hidraw** to build linking to HIDRaw **Recommended**
+**make libusb** to build linking to libusb
+
+### Windows
+
+Unknown TBD
 
 ### OSX
 
@@ -199,33 +235,3 @@ At the very least:
 - git
 
 **make** to build
-
-### FreeBSD
-
-Required dependencies:
-```sh
-pkg install gcc
-pkg install git
-pkg install autoconf
-pkg install automake
-pkg install libtool
-pkg install libiconv
-pkg install gmake
-```
-
-**gmake** instead of make to build
-
-### Linux
-
-Required dependencies:
-
-**Ubuntu:**
-```sh
-apt-get install gcc git autoconf automake libtool pkg-config libusb-dev libusb-1.0-0-dev
-```
-
-**make** to build
-
-### Windows
-
-Unknown TBD
