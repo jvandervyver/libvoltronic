@@ -42,71 +42,58 @@ voltronic_dev_t voltronic_serial_create(
     }
   }
 
-  do {
-    if (impl_ptr == 0) break;
-
+  if (impl_ptr != 0) {
     const enum sp_return open_status = sp_open(VOLTRONIC_DEV_SP(impl_ptr), SP_MODE_READ_WRITE);
-    if (open_status != SP_OK) break;
+    if (open_status == SP_OK) {
+      if (voltronic_dev_serial_configure(impl_ptr, baud_rate, data_bits, stop_bits, parity) > 0) {
+        return voltronic_dev_create(
+          impl_ptr,
+          &voltronic_dev_serial_read,&voltronic_dev_serial_write,
+          &voltronic_dev_serial_close);
+      }
+    }
 
-    if (voltronic_dev_serial_configure(
-      impl_ptr, baud_rate, data_bits, stop_bits, parity) <= 0) break;
+    sp_free_port(VOLTRONIC_DEV_SP(impl_ptr));
 
-    return voltronic_dev_create(
-      impl_ptr,
-      &voltronic_dev_serial_read,
-      &voltronic_dev_serial_write,
-      &voltronic_dev_serial_close);
-
-  } while(0);
-  sp_free_port(VOLTRONIC_DEV_SP(impl_ptr));
-
-  return 0;
+    return 0;
+  } else {
+    return 0;
+  }
 }
 
-static int voltronic_dev_serial_read(
+static inline int voltronic_dev_serial_read(
     void* impl_ptr,
     char* buffer,
     const size_t buffer_size,
     const unsigned long timeout_milliseconds) {
 
-  if (impl_ptr != 0) {
-    return sp_blocking_read_next(
-      VOLTRONIC_DEV_SP(impl_ptr),
-      buffer,
-      buffer_size,
-      timeout_milliseconds);
-
-  } else {
-    return -1;
-  }
+  return sp_blocking_read_next(
+    VOLTRONIC_DEV_SP(impl_ptr),
+    buffer,
+    buffer_size,
+    timeout_milliseconds);
 }
 
-static int voltronic_dev_serial_write(
+static inline int voltronic_dev_serial_write(
     void* impl_ptr,
     const char* buffer,
     const size_t buffer_size) {
 
-  if (impl_ptr != 0) {
-    return sp_nonblocking_write(
-      VOLTRONIC_DEV_SP(impl_ptr),
-      buffer,
-      buffer_size);
+  return sp_nonblocking_write(
+    VOLTRONIC_DEV_SP(impl_ptr),
+    buffer,
+    buffer_size);
 
-  } else {
-    return -1;
-  }
 }
 
 static int voltronic_dev_serial_close(void* impl_ptr) {
-  if (impl_ptr != 0) {
-    const enum sp_return result = sp_close(VOLTRONIC_DEV_SP(impl_ptr));
-    if (result == SP_OK) {
-      sp_free_port(VOLTRONIC_DEV_SP(impl_ptr));
-      return 1;
-    }
+  const enum sp_return result = sp_close(VOLTRONIC_DEV_SP(impl_ptr));
+  if (result == SP_OK) {
+    sp_free_port(VOLTRONIC_DEV_SP(impl_ptr));
+    return 1;
+  } else {
+    return -1;
   }
-
-  return -1;
 }
 
 static inline int voltronic_dev_baud_rate(const baud_rate_t baud_rate) {
@@ -157,24 +144,23 @@ static int voltronic_dev_serial_configure(
     const serial_parity_t parity) {
 
   struct sp_port_config *config_ptr;
+  if (sp_new_config(&config_ptr) == SP_OK) {
+    if (sp_get_config(VOLTRONIC_DEV_SP(impl_ptr), config_ptr) == SP_OK) {
+      if (sp_set_config_baudrate (config_ptr, voltronic_dev_baud_rate(baud_rate)) == SP_OK) {
+        if (sp_set_config_bits(config_ptr, voltronic_dev_data_bits(data_bits)) == SP_OK) {
+          if (sp_set_config_stopbits(config_ptr, voltronic_dev_stop_bits(stop_bits)) == SP_OK) {
+            if (sp_set_config_parity(config_ptr, voltronic_dev_serial_parity(parity)) == SP_OK) {
+              if (sp_set_config(VOLTRONIC_DEV_SP(impl_ptr), config_ptr) == SP_OK) {
+                return 1;
+              }
+            }
+          }
+        }
+      }
+    }
 
-  if (sp_new_config(&config_ptr) != SP_OK) {
-    return -1;
+    sp_free_config(config_ptr);
   }
 
-  int result = -1;
-  do {
-    if (sp_get_config(VOLTRONIC_DEV_SP(impl_ptr), config_ptr) != SP_OK) break;
-
-    if (sp_set_config_baudrate (config_ptr, voltronic_dev_baud_rate(baud_rate)) != SP_OK) break;
-    if (sp_set_config_bits(config_ptr, voltronic_dev_data_bits(data_bits)) != SP_OK) break;
-    if (sp_set_config_stopbits(config_ptr, voltronic_dev_stop_bits(stop_bits)) != SP_OK) break;
-    if (sp_set_config_parity(config_ptr, voltronic_dev_serial_parity(parity)) != SP_OK) break;
-
-    if (sp_set_config(VOLTRONIC_DEV_SP(impl_ptr), config_ptr) != SP_OK) break;
-    result = 1;
-  } while(0);
-
-  sp_free_config(config_ptr);
-  return result;
+  return -1;
 }

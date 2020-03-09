@@ -14,7 +14,7 @@ LDIR = lib
 LIBS =
 
 # add includes
-CFLAGS += -I$(IDIR) -Ilib/libserialport/ -Ilib/libhidapi/hidapi
+CFLAGS += -I$(IDIR) -Ilib/libserialport -Ilib/libhidapi/hidapi
 
 # define the C source files
 SDIR = src

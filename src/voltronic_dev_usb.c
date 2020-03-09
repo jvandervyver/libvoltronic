@@ -74,47 +74,34 @@ voltronic_dev_t voltronic_usb_create(
   return 0;
 }
 
-static int voltronic_dev_usb_read(
+static inline int voltronic_dev_usb_read(
     void* impl_ptr,
     char* buffer,
     const size_t buffer_size,
     const unsigned long timeout_milliseconds) {
 
-  if (impl_ptr != 0) {
-    return hid_read_timeout(
-      VOLTRONIC_DEV_USB(impl_ptr),
-      (unsigned char*) buffer,
-      buffer_size,
-      timeout_milliseconds);
-
-  } else {
-    return -1;
-  }
+  return hid_read_timeout(
+    VOLTRONIC_DEV_USB(impl_ptr),
+    (unsigned char*) buffer,
+    buffer_size,
+    timeout_milliseconds);
 }
 
-static int voltronic_dev_usb_write(
+static inline int voltronic_dev_usb_write(
     void* impl_ptr,
     const char* buffer,
     const size_t buffer_size) {
 
-  if (impl_ptr != 0) {
-    return hid_write(
-      VOLTRONIC_DEV_USB(impl_ptr),
-      (const unsigned char*) buffer,
-      buffer_size);
+  return hid_write(
+    VOLTRONIC_DEV_USB(impl_ptr),
+    (const unsigned char*) buffer,
+    buffer_size);
 
-  } else {
-    return -1;
-  }
 }
 
 static int voltronic_dev_usb_close(void* impl_ptr) {
-  if (impl_ptr != 0) {
-    hid_close(VOLTRONIC_DEV_USB(impl_ptr));
-    return 1;
-  }
-
-  return -1;
+  hid_close(VOLTRONIC_DEV_USB(impl_ptr));
+  return 1;
 }
 
 static inline size_t voltronic_usb_wchar_size(

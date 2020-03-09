@@ -3,6 +3,11 @@
 
   #include <stddef.h>
 
+  /**
+  * Enable changing errno on errors
+  */
+  #define ENABLE_ERRNO 1
+
   typedef struct voltronic_dev_struct_t* voltronic_dev_t;
 
   int voltronic_dev_read(

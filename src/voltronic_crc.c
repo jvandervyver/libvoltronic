@@ -11,7 +11,7 @@ int write_voltronic_crc(
     char* buffer,
     const size_t buffer_length) {
 
-  if ((buffer == 0) || (buffer_length <= sizeof(voltronic_crc_t))) {
+  if (buffer_length <= sizeof(voltronic_crc_t)) {
     return 0;
   }
 
@@ -25,7 +25,7 @@ voltronic_crc_t read_voltronic_crc(
     const char* buffer,
     const size_t buffer_length) {
 
-  if ((buffer == 0) || (buffer_length < sizeof(voltronic_crc_t))) {
+  if (buffer_length < sizeof(voltronic_crc_t)) {
     return 0;
   }
 
@@ -84,7 +84,7 @@ voltronic_crc_t calculate_voltronic_crc(
 
   voltronic_crc_t crc = 0;
 
-  if ((buffer == 0) || (buffer_length <= 0)) {
+  if (buffer_length <= 0) {
     return crc;
   }
 
