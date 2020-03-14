@@ -5,20 +5,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef ENABLE_ERRNO
-  #define ENABLE_ERRNO 0
-#endif
-
-#if ENABLE_ERRNO > 0
-  #include <errno.h>
-  #define SET_ERRNO(__val__) errno = __val__;
-#else
-  #define SET_ERRNO(__val__) 0;
-#endif
-
-static const char END_OF_INPUT = '\r';
-
-#define SIZE_OF_CRC_CR (sizeof(voltronic_crc_t) + sizeof(END_OF_INPUT))
+#define END_OF_INPUT '\r'
+#define END_OF_INPUT_SIZE sizeof(char)
+#define NON_DATA_SIZE (sizeof(voltronic_crc_t) + END_OF_INPUT_SIZE)
 
 struct voltronic_dev_struct_t {
   void* impl_ptr;
@@ -33,19 +22,12 @@ voltronic_dev_t voltronic_dev_create(
     const voltronic_dev_write_f write_function,
     const voltronic_dev_close_f close_function) {
 
-  SET_ERRNO(EINVAL);
+  if ((impl_ptr != 0) &&
+    (read_function != 0) &&
+    (write_function != 0) &&
+    (close_function != 0)) {
 
-  if (impl_ptr == 0) {
-    return 0;
-  } else if (read_function == 0) {
-    return 0;
-  } else if (write_function == 0) {
-    return 0;
-  } else if (close_function == 0) {
-    return 0;
-  } else {
     SET_ERRNO(0);
-
     const voltronic_dev_t dev = malloc(sizeof(struct voltronic_dev_struct_t));
     if (dev != 0) {
       const struct voltronic_dev_struct_t dev_struct = {
@@ -58,6 +40,9 @@ voltronic_dev_t voltronic_dev_create(
     }
 
     return dev;
+  } else {
+    SET_ERRNO(EINVAL);
+    return 0;
   }
 }
 
@@ -67,16 +52,14 @@ int voltronic_dev_read(
     const size_t buffer_size,
     const unsigned long timeout_milliseconds) {
 
-  SET_ERRNO(0);
-
   if (dev != 0 && buffer != 0 && buffer_size > 0) {
     const voltronic_dev_read_f read_function = dev->read;
     void* impl_ptr = dev->impl_ptr;
 
+    SET_ERRNO(0);
     return read_function(impl_ptr, buffer, buffer_size, timeout_milliseconds);
   } else {
     SET_ERRNO(EINVAL);
-
     return -1;
   }
 }
@@ -86,11 +69,11 @@ int voltronic_dev_write(
     const char* buffer,
     const size_t buffer_size) {
 
-  SET_ERRNO(0);
   if (dev != 0 && buffer != 0 && buffer_size > 0) {
     const voltronic_dev_write_f write_function = dev->write;
     void* impl_ptr = dev->impl_ptr;
 
+    SET_ERRNO(0);
     return write_function(impl_ptr, buffer, buffer_size);
   } else {
     SET_ERRNO(EINVAL);
@@ -100,14 +83,12 @@ int voltronic_dev_write(
 
 int voltronic_dev_close(voltronic_dev_t dev) {
   SET_ERRNO(EINVAL);
-
   if (dev != 0) {
     const voltronic_dev_close_f close_function = dev->close;
     if (close_function != 0) {
       void* impl_ptr = dev->impl_ptr;
       if (impl_ptr != 0) {
         SET_ERRNO(0);
-
         const int result = close_function(impl_ptr);
         if (result > 0) {
           dev->impl_ptr = 0;
@@ -129,52 +110,43 @@ static int voltronic_read_data_loop(
     const unsigned long timeout_milliseconds) {
 
   unsigned int size = 0;
-  unsigned int parse_complete = 1;
 
   const millisecond_timestamp_t start_time = get_millisecond_timestamp();
   millisecond_timestamp_t elapsed = 0;
 
   while(1) {
-    int read_result = voltronic_dev_read(
+    int bytes_read = voltronic_dev_read(
       dev,
       buffer,
       buffer_length,
       timeout_milliseconds - elapsed);
 
-    if (read_result < 0) {
-      return read_result;
-    }
+    if (bytes_read >= 0) {
+      while(bytes_read) {
+        --bytes_read;
+        ++size;
 
-    while(read_result) {
-      --read_result;
-      ++size;
+        if (*buffer == END_OF_INPUT) {
+          SET_ERRNO(0);
+          return size;
+        }
 
-      if (*buffer == END_OF_INPUT) {
-        parse_complete = 0;
-        read_result = 0;
+        buffer += sizeof(char);
+        --buffer_length;
       }
 
-      ++buffer;
-      --buffer_length;
-    }
+      elapsed = get_millisecond_timestamp() - start_time;
+      if (elapsed >= timeout_milliseconds) {
+        SET_ERRNO(ETIMEDOUT);
+        return -1;
+      }
 
-    if (parse_complete == 0) {
-      SET_ERRNO(0);
-
-      return size;
-    }
-
-    elapsed = get_millisecond_timestamp() - start_time;
-    if (elapsed >= timeout_milliseconds) {
-      SET_ERRNO(ETIME);
-
-      return -1;
-    }
-
-    if (buffer_length <= 0) {
-      SET_ERRNO(ENOBUFS);
-
-      return -1;
+      if (buffer_length <= 0) {
+        SET_ERRNO(ENOBUFS);
+        return -1;
+      }
+    } else {
+      return bytes_read;
     }
   }
 }
@@ -185,38 +157,30 @@ static int voltronic_receive_data(
     const size_t buffer_length,
     const unsigned long timeout_milliseconds) {
 
-  int result = voltronic_read_data_loop(
+  const int result = voltronic_read_data_loop(
     dev,
     buffer,
     buffer_length,
     timeout_milliseconds);
 
-  if (result <= 0) {
+  if (result >= 0) {
+    if (((size_t) result) >= NON_DATA_SIZE) {
+      const size_t data_size = result - NON_DATA_SIZE;
+      const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
+      const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
+      buffer[data_size] = 0;
+
+      if (read_crc == calculated_crc) {
+        SET_ERRNO(0);
+        return data_size;
+      }
+    }
+
+    SET_ERRNO(EBADMSG);
+    return -1;
+  } else {
     return result;
   }
-
-  // Result couldn't possible contain the CRC & CR character
-  if (((size_t) result) < SIZE_OF_CRC_CR) {
-    SET_ERRNO(EBADMSG);
-
-    return -1;
-  }
-
-  const size_t data_size = result - SIZE_OF_CRC_CR;
-  const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], SIZE_OF_CRC_CR);
-  const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
-  buffer[data_size] = 0;
-
-  // CRC Mismatch
-  if (read_crc != calculated_crc) {
-    SET_ERRNO(EBADMSG);
-
-    return -1;
-  }
-
-  SET_ERRNO(0);
-
-  return data_size;
 }
 
 static int voltronic_write_data_loop(
@@ -228,25 +192,25 @@ static int voltronic_write_data_loop(
   const millisecond_timestamp_t start_time = get_millisecond_timestamp();
   millisecond_timestamp_t elapsed = 0;
 
+  int bytes_left = buffer_length;
   while(1) {
-    int write_result = voltronic_dev_write(dev, buffer, buffer_length);
+    const int write_result = voltronic_dev_write(dev, buffer, bytes_left);
 
-    if (write_result < 0) {
-      return write_result;
-    }
-
-    if (write_result > 0) {
-      buffer_length -= write_result;
-      if (buffer_length > 0) {
+    if (write_result >= 0) {
+      bytes_left -= write_result;
+      if (bytes_left > 0) {
         buffer = &buffer[write_result];
       } else {
-        return 1;
+        return buffer_length;
       }
-    }
 
-    elapsed = get_millisecond_timestamp() - start_time;
-    if (elapsed >= timeout_milliseconds) {
-      return -1;
+      elapsed = get_millisecond_timestamp() - start_time;
+      if (elapsed >= timeout_milliseconds) {
+        SET_ERRNO(ETIMEDOUT);
+        return -1;
+      }
+    } else {
+      return write_result;
     }
   }
 }
@@ -254,19 +218,19 @@ static int voltronic_write_data_loop(
 static int voltronic_send_data(
     const voltronic_dev_t dev,
     const char* buffer,
-    size_t buffer_length,
+    const size_t buffer_length,
     const unsigned long timeout_milliseconds) {
 
   const voltronic_crc_t crc = calculate_voltronic_crc(buffer, buffer_length);
 
-  const size_t copy_length = buffer_length + SIZE_OF_CRC_CR;
+  const size_t copy_length = buffer_length + NON_DATA_SIZE;
   char* copy = malloc(copy_length * sizeof(char));
   memcpy(copy, buffer, buffer_length * sizeof(char));
 
-  write_voltronic_crc(crc, &copy[buffer_length], SIZE_OF_CRC_CR);
+  write_voltronic_crc(crc, &copy[buffer_length], NON_DATA_SIZE);
   copy[copy_length - 1] = END_OF_INPUT;
 
-  int result = voltronic_write_data_loop(
+  const int result = voltronic_write_data_loop(
     dev,
     copy,
     copy_length,
@@ -289,8 +253,7 @@ int voltronic_dev_execute(
   millisecond_timestamp_t elapsed = 0;
 
   SET_ERRNO(0);
-
-  int send_result = voltronic_send_data(
+  const int send_result = voltronic_send_data(
     dev,
     send_buffer,
     send_buffer_length,
@@ -298,17 +261,15 @@ int voltronic_dev_execute(
 
   if (send_result > 0) {
     elapsed = get_millisecond_timestamp() - start_time;
-    if (timeout_milliseconds > elapsed) {
+    if (elapsed < timeout_milliseconds) {
       SET_ERRNO(0);
-
       return voltronic_receive_data(
         dev,
         receive_buffer,
         receive_buffer_length,
         timeout_milliseconds - elapsed);
     } else {
-      SET_ERRNO(ETIME);
-
+      SET_ERRNO(ETIMEDOUT);
       return -1;
     }
   } else {

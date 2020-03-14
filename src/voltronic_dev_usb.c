@@ -12,6 +12,9 @@
 #endif
 
 #define VOLTRONIC_DEV_USB(_impl_ptr_) ((hid_device*) (_impl_ptr_))
+#define HID_REPORT_SIZE 8
+#define GET_REPORT_SIZE(_val_) \
+  ((_val_ > HID_REPORT_SIZE) ? HID_REPORT_SIZE : _val_)
 
 static int voltronic_dev_usb_read(
   void* impl_ptr,
@@ -83,7 +86,7 @@ static inline int voltronic_dev_usb_read(
   return hid_read_timeout(
     VOLTRONIC_DEV_USB(impl_ptr),
     (unsigned char*) buffer,
-    buffer_size,
+    GET_REPORT_SIZE(buffer_size),
     timeout_milliseconds);
 }
 
@@ -92,11 +95,16 @@ static inline int voltronic_dev_usb_write(
     const char* buffer,
     const size_t buffer_size) {
 
-  return hid_write(
-    VOLTRONIC_DEV_USB(impl_ptr),
-    (const unsigned char*) buffer,
-    buffer_size);
+  const int write_size = GET_REPORT_SIZE(buffer_size);
+  unsigned char write_buffer[HID_REPORT_SIZE + 1] = {0};
+  memcpy(&write_buffer[1], buffer, write_size);
 
+  const int bytes_written = hid_write(
+      VOLTRONIC_DEV_USB(impl_ptr),
+      write_buffer,
+      HID_REPORT_SIZE + 1);
+
+  return GET_REPORT_SIZE(bytes_written);
 }
 
 static int voltronic_dev_usb_close(void* impl_ptr) {
@@ -126,11 +134,11 @@ static inline size_t voltronic_usb_wchar_size(
   return wide_chars;
 }
 
-static inline void voltronic_usb_exit_hidapi() {
+static inline void voltronic_usb_exit_hidapi(void) {
   hid_exit();
 }
 
-static inline void voltronic_usb_init_hidapi() {
+static inline void voltronic_usb_init_hidapi(void) {
   #if defined(_WIN32) || defined(WIN32)
     static unsigned __int8 hidapi_init_complete = 0;
   #else

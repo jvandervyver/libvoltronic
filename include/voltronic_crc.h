@@ -13,13 +13,6 @@
     typedef uint16_t voltronic_crc_t;
   #endif
 
-  /**
-   * Switch to bit-by-bit CRC16 calculation algorithm instead of a table driven algorithm
-   *
-   * This will save 4KiB of program space at the cost of some computation time
-   */
-  #define VOLTRONIC_CRC_USE_TABLE_METHOD    1
-
   int write_voltronic_crc(
     const voltronic_crc_t crc,
     char* buffer,

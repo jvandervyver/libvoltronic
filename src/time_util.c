@@ -3,7 +3,7 @@
 #if defined(_WIN32) || defined(WIN32)
   #include <Windows.h>
 
-  millisecond_timestamp_t get_millisecond_timestamp() {
+  millisecond_timestamp_t get_millisecond_timestamp(void) {
     return (millisecond_timestamp_t) GetTickCount();
   }
 
@@ -19,7 +19,7 @@
     #define _POSIX_MONOTONIC_CLOCK (-1)
   #endif
 
-  millisecond_timestamp_t get_millisecond_timestamp() {
+  millisecond_timestamp_t get_millisecond_timestamp(void) {
     static uint8_t first_init_complete = 1;
 
     millisecond_timestamp_t milliseconds = 0;
