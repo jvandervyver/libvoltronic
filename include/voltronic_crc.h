@@ -13,6 +13,8 @@
     typedef uint16_t voltronic_crc_t;
   #endif
 
+  int is_platform_supported(void);
+
   int write_voltronic_crc(
     const voltronic_crc_t crc,
     char* buffer,

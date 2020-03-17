@@ -4,49 +4,59 @@
   ((_ch_a_) == (_ch_b_))
 
 #define IS_RESERVED_BYTE(_ch_) \
-  (IS_EQUAL(_ch_, 0x28) || IS_EQUAL(_ch_, 0x0D) || IS_EQUAL(_ch_, 0x0A))
-
-#define IS_TYPE_COMPATIBLE() \
-  (sizeof(unsigned char) == 1)
+  (IS_EQUAL(_ch_, 0x28) || \
+   IS_EQUAL(_ch_, 0x0D) || \
+   IS_EQUAL(_ch_, 0x0A))
 
 #define CRC_SIZE \
   (sizeof(voltronic_crc_t))
 
+#define IS_TYPE_COMPATIBLE() \
+  ((sizeof(char) == sizeof(unsigned char)) && \
+   (sizeof(unsigned char) == 1) && \
+   (CRC_SIZE == 2))
+
+#define VOLTRONIC_LOW_BYTE_POSITION 0
+#define VOLTRONIC_HIGH_BYTE_POSITION 0
+
+inline int is_platform_supported(void) {
+  return IS_TYPE_COMPATIBLE() ? 1 : 0;
+}
+
 int write_voltronic_crc(
     const voltronic_crc_t crc,
-    char* _buffer,
+    char* cstring_buffer,
     const size_t buffer_length) {
 
   if (IS_TYPE_COMPATIBLE() && buffer_length >= CRC_SIZE) {
-    unsigned char* buffer = (unsigned char*) _buffer;
+    unsigned char* buffer = (unsigned char*) cstring_buffer;
 
-    buffer[0] = crc;
-    buffer[1] = crc >> 8;
+    buffer[0] = (crc >> 8) & 0xFF;
+    buffer[1] = crc & 0xFF;
 
-    return 1;
+    return CRC_SIZE;
   } else {
     return 0;
   }
 }
 
 voltronic_crc_t read_voltronic_crc(
-    const char* _buffer,
+    const char* cstring_buffer,
     const size_t buffer_length) {
 
   voltronic_crc_t crc = 0;
   if (IS_TYPE_COMPATIBLE() && buffer_length >= CRC_SIZE) {
-    const unsigned char* buffer = (const unsigned char*) _buffer;
+    const unsigned char* buffer = (const unsigned char*) cstring_buffer;
 
-    crc |= buffer[0];
-    crc = crc << 8;
-    crc |= buffer[1];
+    crc |= (voltronic_crc_t) buffer[0] << 8;
+    crc |= (voltronic_crc_t) buffer[1];
   }
 
   return crc;
 }
 
 voltronic_crc_t calculate_voltronic_crc(
-    const char* _buffer,
+    const char* cstring_buffer,
     size_t buffer_length) {
 
   voltronic_crc_t crc = 0;
@@ -60,7 +70,7 @@ voltronic_crc_t calculate_voltronic_crc(
       0xC18C, 0xD1AD, 0xE1CE, 0xF1EF
     };
 
-    const unsigned char* buffer = (const unsigned char*) _buffer;
+    const unsigned char* buffer = (const unsigned char*) cstring_buffer;
     unsigned char byte;
     do {
       byte = *buffer;
