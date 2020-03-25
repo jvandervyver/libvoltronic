@@ -96,7 +96,8 @@ static inline int voltronic_dev_usb_write(
     const size_t buffer_size) {
 
   const int write_size = GET_REPORT_SIZE(buffer_size);
-  unsigned char write_buffer[HID_REPORT_SIZE + 1] = {0};
+  unsigned char write_buffer[HID_REPORT_SIZE + 1];
+  memset(write_buffer, 0, HID_REPORT_SIZE + 1);
   memcpy(&write_buffer[1], buffer, write_size);
 
   const int bytes_written = hid_write(
@@ -139,11 +140,7 @@ static inline void voltronic_usb_exit_hidapi(void) {
 }
 
 static inline void voltronic_usb_init_hidapi(void) {
-  #if defined(_WIN32) || defined(WIN32)
-    static unsigned __int8 hidapi_init_complete = 0;
-  #else
-    static uint8_t hidapi_init_complete = 0;
-  #endif
+  static int hidapi_init_complete = 0;
 
   if (hidapi_init_complete == 0) {
     if (hid_init() == 0) {

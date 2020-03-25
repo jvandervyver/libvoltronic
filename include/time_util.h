@@ -8,7 +8,11 @@
   #else
     #include <stdint.h>
 
-    typedef uint64_t millisecond_timestamp_t;
+    #ifdef UINT64_MAX
+      typedef uint64_t millisecond_timestamp_t;
+    #elif UINT32_MAX
+      typedef uint32_t millisecond_timestamp_t;
+    #endif
   #endif
 
   millisecond_timestamp_t get_millisecond_timestamp(void);

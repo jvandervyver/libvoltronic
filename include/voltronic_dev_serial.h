@@ -3,15 +3,7 @@
 
   #include "voltronic_dev.h"
 
-  #if defined(_WIN32) || defined(WIN32)
-    #include <Windows.h>
-
-    typedef unsigned __int32 baud_rate_t;
-  #else
-    #include <stdint.h>
-
-    typedef uint_fast32_t baud_rate_t;
-  #endif
+  typedef unsigned int baud_rate_t;
 
   typedef enum {
     DATA_BITS_FIVE,

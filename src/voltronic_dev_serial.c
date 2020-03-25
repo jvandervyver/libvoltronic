@@ -83,7 +83,6 @@ static inline int voltronic_dev_serial_write(
     VOLTRONIC_DEV_SP(impl_ptr),
     buffer,
     buffer_size);
-
 }
 
 static int voltronic_dev_serial_close(void* impl_ptr) {
