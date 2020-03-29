@@ -22,11 +22,14 @@ SHARED_OBJS = $(ODIR)/time_util.o $(ODIR)/voltronic_crc.o $(ODIR)/voltronic_dev.
 
 # Directives
 default:
-	@echo "Different compile options exist; ie. make libserialport; make hidapi; etc."
+	@echo "Different compile options exist using different underlying hardware and libraries to communicate with the hardware"
+	@echo ""
 	@echo "  libserialport - Serial port using libserialport"
 	@echo "  hidapi - USB support using HIDApi in Mac, Windows, FreeBSD"
 	@echo "  hidapi-hidraw - USB support in Linux using HIDApi utilizing HIDRaw"
 	@echo "  hidapi-libusb - USB support using HIDApi utilizing LibUSB"
+	@echo ""
+	@echo "Usage: make libserialport; make hidapi; etc."
 
 libserialport: $(SHARED_OBJS) $(ODIR)/serial_main.o $(ODIR)/voltronic_dev_serial_libserialport.o
 	$(CC) -o $@ $^ $(CFLAGS) -lserialport
