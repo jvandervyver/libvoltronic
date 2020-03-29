@@ -18,7 +18,7 @@ CFLAGS += -I$(IDIR) -I$(LDIR)/libserialport -I$(LDIR)/hidapi/hidapi -I$(LDIR)/li
 SRCS = $(wildcard $(SDIR)/*.c)
 
 # Object files shared by all directives
-SHARED_OBJS = $(ODIR)/time_util.o $(ODIR)/voltronic_crc.o $(ODIR)/voltronic_dev.o 
+SHARED_OBJS = $(ODIR)/voltronic_crc.o $(ODIR)/voltronic_dev.o 
 
 # Directives
 default:

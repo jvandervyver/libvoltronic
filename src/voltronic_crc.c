@@ -11,24 +11,15 @@
 #define CRC_SIZE \
   (sizeof(voltronic_crc_t))
 
-#define IS_TYPE_COMPATIBLE() \
-  ((sizeof(char) == sizeof(unsigned char)) && \
-   (sizeof(unsigned char) == 1) && \
-   (CRC_SIZE == 2))
-
 #define VOLTRONIC_LOW_BYTE_POSITION 0
 #define VOLTRONIC_HIGH_BYTE_POSITION 0
-
-inline int is_platform_supported(void) {
-  return IS_TYPE_COMPATIBLE() ? 1 : 0;
-}
 
 int write_voltronic_crc(
     const voltronic_crc_t crc,
     char* cstring_buffer,
     const size_t buffer_length) {
 
-  if (IS_TYPE_COMPATIBLE() && buffer_length >= CRC_SIZE) {
+  if (cstring_buffer != 0 && buffer_length >= CRC_SIZE) {
     unsigned char* buffer = (unsigned char*) cstring_buffer;
 
     buffer[0] = (crc >> 8) & 0xFF;
@@ -45,7 +36,7 @@ voltronic_crc_t read_voltronic_crc(
     const size_t buffer_length) {
 
   voltronic_crc_t crc = 0;
-  if (IS_TYPE_COMPATIBLE() && buffer_length >= CRC_SIZE) {
+  if (cstring_buffer != 0 && buffer_length >= CRC_SIZE) {
     const unsigned char* buffer = (const unsigned char*) cstring_buffer;
 
     crc |= (voltronic_crc_t) buffer[0] << 8;
@@ -60,8 +51,7 @@ voltronic_crc_t calculate_voltronic_crc(
     size_t buffer_length) {
 
   voltronic_crc_t crc = 0;
-
-  if (IS_TYPE_COMPATIBLE() && buffer_length > 0) {
+  if (cstring_buffer != 0 && buffer_length > 0) {
 
     static const voltronic_crc_t crc_table[16] = {
       0x0000, 0x1021, 0x2042, 0x3063,
