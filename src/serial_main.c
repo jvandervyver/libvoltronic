@@ -13,9 +13,25 @@ int main() {
     return 1;
   }
 
-  // Query the device
   char buffer[256];
-  int result = voltronic_dev_execute(dev, "QPI", 3, buffer, sizeof(buffer), 1000);
+  int result;
+
+  // Write end of input
+  result = voltronic_dev_write(
+    dev,
+    "\r",
+    1,
+    1000);
+
+  // Read (NAK
+  result = voltronic_dev_read(
+    dev,
+    buffer,
+    sizeof(buffer),
+    1000);
+
+  // Query the device
+  result = voltronic_dev_execute(dev, "QPI", 3, buffer, sizeof(buffer), 1000);
 
   // Close the connection to the device
   voltronic_dev_close(dev);
