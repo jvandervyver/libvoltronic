@@ -9,8 +9,7 @@
     DATA_BITS_FIVE,
     DATA_BITS_SIX,
     DATA_BITS_SEVEN,
-    DATA_BITS_EIGHT,
-    DATA_BITS_NINE
+    DATA_BITS_EIGHT
   } data_bits_t;
 
   typedef enum {

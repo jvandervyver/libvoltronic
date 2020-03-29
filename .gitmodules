@@ -1,0 +1,15 @@
+[submodule "lib/hidapi"]
+	path = lib/hidapi
+	url = https://github.com/libusb/hidapi.git
+    branch = master
+    update = merge
+[submodule "lib/libserialport"]
+	path = lib/libserialport
+	url = git://sigrok.org/libserialport
+    branch = master
+    update = merge
+[submodule "lib/libusb"]
+	path = lib/libusb
+	url = https://github.com/libusb/libusb.git
+    branch = master
+    update = merge

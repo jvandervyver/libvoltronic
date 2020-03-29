@@ -2,75 +2,50 @@
 CC = gcc
 CP = cp -f
 
-# define any compile-time flags
-CFLAGS = -std=c99 -Wall -Wextra -pedantic -Wmissing-prototypes -Wshadow -O3 -flto -fomit-frame-pointer
-
-# define any directories containing header files other than /usr/include
+#directories
 IDIR = include
-DEPS = $(wildcard $(IDIR)/*.h)
-
-# define any libraries
 LDIR = lib
-LIBS =
+SDIR = src
+ODIR = obj
+
+# define any compile-time flags
+CFLAGS = -std=c99 -Werror -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wshadow -O3 -flto -fomit-frame-pointer
 
 # add includes
-CFLAGS += -I$(IDIR) -Ilib/libserialport -Ilib/libhidapi/hidapi
+CFLAGS += -I$(IDIR) -I$(LDIR)/libserialport -I$(LDIR)/hidapi/hidapi -I$(LDIR)/libusb/libusb
 
 # define the C source files
-SDIR = src
 SRCS = $(wildcard $(SDIR)/*.c)
 
-# Object files
-ODIR = obj
-OBJS = $(patsubst %,$(ODIR)/%,$(notdir $(SRCS:.c=.o)))
+# Object files shared by all directives
+SHARED_OBJS = $(ODIR)/time_util.o $(ODIR)/voltronic_crc.o $(ODIR)/voltronic_dev.o 
 
 # Directives
+default:
+	@echo "Different compile options exist; ie. make libserialport; make hidapi; etc."
+	@echo "  libserialport - Serial port using libserialport"
+	@echo "  hidapi - USB support using HIDApi in Mac, Windows, FreeBSD"
+	@echo "  hidapi-hidraw - USB support in Linux using HIDApi utilizing HIDRaw"
+	@echo "  hidapi-libusb - USB support using HIDApi utilizing LibUSB"
 
-default: no_default
-
-no_default:
-	@echo "Different compile options exist (ie. make serial)"
-	@echo "  serial - Serial port only"
-	@echo "  usb_default - USB support in Mac, Windows, FreeBSD"
-	@echo "  hidraw - USB support in Linux using hidraw"
-	@echo "  libusb - USB support using libUSB"
-	@echo "  serial_usb_default - serial & usb_default"
-	@echo "  serial_hidraw - serial & hidraw"
-	@echo "  serial_libusb - serial & libusb"
-
-serial: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport
-	$(CP) $@ voltroniclib
+libserialport: $(SHARED_OBJS) $(ODIR)/serial_main.o $(ODIR)/voltronic_dev_serial_libserialport.o
+	$(CC) -o $@ $^ $(CFLAGS) -lserialport
+	$(CP) $@ libvoltronic_libserialport
 	$(RM) $@
 
-usb_default: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi
-	$(CP) $@ voltroniclib
+hidapi: $(SHARED_OBJS) $(ODIR)/usb_main.o $(ODIR)/voltronic_dev_usb_hidapi.o
+	$(CC) -o $@ $^ $(CFLAGS) -lhidapi
+	$(CP) $@ libvoltronic_hidapi
 	$(RM) $@
 
-serial_usb_default: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport -lhidapi
-	$(CP) $@ voltroniclib
+hidapi-hidraw: $(SHARED_OBJS) $(ODIR)/usb_main.o $(ODIR)/voltronic_dev_usb_hidapi.o
+	$(CC) -o $@ $^ $(CFLAGS) -lhidapi-hidraw
+	$(CP) $@ libvoltronic_hidapi_hidraw
 	$(RM) $@
 
-hidraw: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi-hidraw
-	$(CP) $@ voltroniclib
-	$(RM) $@
-
-serial_hidraw: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport -lhidapi-hidraw
-	$(CP) $@ voltroniclib
-	$(RM) $@
-
-libusb: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lhidapi-libusb
-	$(CP) $@ voltroniclib
-	$(RM) $@
-
-serial_libusb: $(OBJS)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) -lserialport -lhidapi-libusb
-	$(CP) $@ voltroniclib
+hidapi-libusb: $(SHARED_OBJS) $(ODIR)/usb_main.o $(ODIR)/voltronic_dev_usb_hidapi.o
+	$(CC) -o $@ $^ $(CFLAGS) -lhidapi-libusb
+	$(CP) $@ libvoltronic_hidapi_libusb
 	$(RM) $@
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
@@ -79,4 +54,4 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/*.o *~ core voltroniclib $(INCDIR)/*~ 
+	$(RM) $(ODIR)/*.o *~ libvoltronic_libserialport libvoltronic_hidapi libvoltronic_hidapi_hidraw libvoltronic_hidapi_libusb $(INCDIR)/*~ 

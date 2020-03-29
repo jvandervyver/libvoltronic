@@ -50,9 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-voltroniclib
-lib/libserialport/*
-lib/libhidapi/*
-lib/libfcgi2/*
+libvoltronic_libserialport
+libvoltronic_hidapi
+libvoltronic_hidapi_hidraw
+libvoltronic_hidapi_libusb
 obj/*
 

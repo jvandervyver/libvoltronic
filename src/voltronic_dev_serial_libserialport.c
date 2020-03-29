@@ -105,7 +105,6 @@ static inline int voltronic_dev_data_bits(const data_bits_t data_bits) {
     case DATA_BITS_SIX: return 6;
     case DATA_BITS_SEVEN: return 7;
     case DATA_BITS_EIGHT: return 8;
-    case DATA_BITS_NINE: return 9;
   }
 
   return -1;
