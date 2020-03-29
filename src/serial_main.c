@@ -1,6 +1,8 @@
 #include "voltronic_dev_serial.h"
 
-#define COMMAND "QPI"
+/**
+* This class is only here to link everything related to serial port to assert compilation
+*/
 
 int main() {
   // Create a serial port dev
@@ -9,10 +11,10 @@ int main() {
 
   // Query the device
   char buffer[256];
-  int result = voltronic_dev_execute(dev, COMMAND, strlen(COMMAND), buffer, sizeof(buffer), 1000);
-  
+  int result = voltronic_dev_execute(dev, "QPI", 3, buffer, sizeof(buffer), 1000);
+
   // Close the connection to the device
   voltronic_dev_close(dev);
 
-  return 0;
+  return result <= 0 ? 1 : 0;
 }
