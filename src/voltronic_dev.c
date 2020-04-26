@@ -380,7 +380,7 @@ int voltronic_dev_execute(
         timeout_milliseconds - elapsed);
 
       if (result > 0) {
-        return 1;
+        return result;
       }
     } else {
       SET_TIMEOUT_REACHED();
