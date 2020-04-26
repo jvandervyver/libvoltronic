@@ -3,8 +3,13 @@
 
   #include <stddef.h>
 
-  #define CRC_ON_WRITE  1
-  #define CRC_ON_READ   1
+  #ifndef FALSE
+    #define FALSE 0
+  #endif
+
+  #ifndef TRUE
+    #define TRUE  1
+  #endif
 
   /**
    * Opaque pointer to a voltronic device
@@ -52,6 +57,16 @@
     const unsigned int timeout_milliseconds);
 
   /**
+   * Enable appending a CRC voltronic_dev_execute writes
+   */
+  #define CRC_ON_WRITE  TRUE
+
+  /**
+   * Enable validating CRC on voltronic_dev_execute reads
+   */
+  #define CRC_ON_READ   TRUE
+
+  /**
    * Write a command to the device and wait for a response from the device
    *
    * dev -> Opaque device pointer
@@ -80,5 +95,6 @@
    */
   int voltronic_dev_close(
     voltronic_dev_t dev);
+
 
 #endif

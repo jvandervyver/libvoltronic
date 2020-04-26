@@ -33,12 +33,20 @@
 
 #endif
 
+#ifndef FALSE
+  #define FALSE 0
+#endif
+
+#ifndef TRUE
+  #define TRUE  1
+#endif
+
 #ifndef CRC_ON_WRITE
-  #define CRC_ON_WRITE  1
+  #define CRC_ON_WRITE  TRUE
 #endif
 
 #ifndef CRC_ON_READ
-  #define CRC_ON_READ   1
+  #define CRC_ON_READ   TRUE
 #endif
 
 #define END_OF_INPUT '\r'
@@ -232,10 +240,9 @@ static int voltronic_receive_data(
     buffer_length,
     timeout_milliseconds);
 
-  CRC_ON_READ (sizeof(voltronic_crc_t) + END_OF_INPUT_SIZE)
-
   if (result >= 0) {
-    #if defined(CRC_ON_READ) && CRC_ON_READ > 0
+    #if defined(CRC_ON_READ) && (CRC_ON_READ == TRUE)
+
       if (((size_t) result) >= NON_DATA_SIZE) {
         const size_t data_size = result - NON_DATA_SIZE;
         const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
@@ -249,12 +256,15 @@ static int voltronic_receive_data(
 
       SET_CRC_ERROR();
       return -1;
+
     #else
+
       if (((size_t) result) >= END_OF_INPUT_SIZE) {
         const size_t data_size = result - END_OF_INPUT_SIZE;
         buffer[data_size] = 0;
         return data_size;
       }
+
     #endif
   } else {
     return result;
@@ -299,7 +309,7 @@ static int voltronic_send_data(
     const size_t buffer_length,
     const unsigned int timeout_milliseconds) {
 
-  #if defined(CRC_ON_WRITE) && CRC_ON_WRITE > 0
+  #if defined(CRC_ON_WRITE) && (CRC_ON_WRITE == TRUE)
 
     const voltronic_crc_t crc = calculate_voltronic_crc(buffer, buffer_length);
 
