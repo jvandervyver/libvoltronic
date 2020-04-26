@@ -3,6 +3,9 @@
 
   #include <stddef.h>
 
+  #define CRC_ON_WRITE  1
+  #define CRC_ON_READ   1
+
   /**
    * Opaque pointer to a voltronic device
    */

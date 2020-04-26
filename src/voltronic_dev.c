@@ -33,6 +33,14 @@
 
 #endif
 
+#ifndef CRC_ON_WRITE
+  #define CRC_ON_WRITE  1
+#endif
+
+#ifndef CRC_ON_READ
+  #define CRC_ON_READ   1
+#endif
+
 #define END_OF_INPUT '\r'
 #define END_OF_INPUT_SIZE sizeof(char)
 #define NON_DATA_SIZE (sizeof(voltronic_crc_t) + END_OF_INPUT_SIZE)
@@ -224,20 +232,30 @@ static int voltronic_receive_data(
     buffer_length,
     timeout_milliseconds);
 
-  if (result >= 0) {
-    if (((size_t) result) >= NON_DATA_SIZE) {
-      const size_t data_size = result - NON_DATA_SIZE;
-      const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
-      const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
-      buffer[data_size] = 0;
+  CRC_ON_READ (sizeof(voltronic_crc_t) + END_OF_INPUT_SIZE)
 
-      if (read_crc == calculated_crc) {
+  if (result >= 0) {
+    #if defined(CRC_ON_READ) && CRC_ON_READ > 0
+      if (((size_t) result) >= NON_DATA_SIZE) {
+        const size_t data_size = result - NON_DATA_SIZE;
+        const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
+        const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
+        buffer[data_size] = 0;
+
+        if (read_crc == calculated_crc) {
+          return data_size;
+        }
+      }
+
+      SET_CRC_ERROR();
+      return -1;
+    #else
+      if (((size_t) result) >= END_OF_INPUT_SIZE) {
+        const size_t data_size = result - END_OF_INPUT_SIZE;
+        buffer[data_size] = 0;
         return data_size;
       }
-    }
-
-    SET_CRC_ERROR();
-    return -1;
+    #endif
   } else {
     return result;
   }
@@ -281,24 +299,47 @@ static int voltronic_send_data(
     const size_t buffer_length,
     const unsigned int timeout_milliseconds) {
 
-  const voltronic_crc_t crc = calculate_voltronic_crc(buffer, buffer_length);
+  #if defined(CRC_ON_WRITE) && CRC_ON_WRITE > 0
 
-  const size_t copy_length = buffer_length + NON_DATA_SIZE;
-  char* copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
-  COPY_MEMORY(copy, buffer, buffer_length * sizeof(char));
+    const voltronic_crc_t crc = calculate_voltronic_crc(buffer, buffer_length);
 
-  write_voltronic_crc(crc, &copy[buffer_length], NON_DATA_SIZE);
-  copy[copy_length - 1] = END_OF_INPUT;
+    const size_t copy_length = buffer_length + NON_DATA_SIZE;
+    char* copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
+    COPY_MEMORY(copy, buffer, buffer_length * sizeof(char));
 
-  const int result = voltronic_write_data_loop(
-    dev,
-    copy,
-    copy_length,
-    timeout_milliseconds);
+    write_voltronic_crc(crc, &copy[buffer_length], NON_DATA_SIZE);
+    copy[copy_length - 1] = END_OF_INPUT;
 
-  FREE_MEMORY(copy);
+    const int result = voltronic_write_data_loop(
+      dev,
+      copy,
+      copy_length,
+      timeout_milliseconds);
 
-  return result;
+    FREE_MEMORY(copy);
+
+    return result;
+
+  #else
+
+    const size_t copy_length = buffer_length + END_OF_INPUT_SIZE;
+    char* copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
+    COPY_MEMORY(copy, buffer, buffer_length * sizeof(char));
+
+    write_voltronic_crc(crc, &copy[buffer_length], END_OF_INPUT_SIZE);
+    copy[copy_length - 1] = END_OF_INPUT;
+
+    const int result = voltronic_write_data_loop(
+      dev,
+      copy,
+      copy_length,
+      timeout_milliseconds);
+
+    FREE_MEMORY(copy);
+
+    return result;
+
+  #endif
 }
 
 int voltronic_dev_execute(
@@ -392,12 +433,6 @@ int voltronic_dev_execute(
 #endif
 
 int is_platform_supported_by_libvoltronic(void) {
-  const int test_value = -1;
-  const voltronic_crc_t crc_test = (voltronic_crc_t) test_value;
-  const millisecond_timestamp_t timestamp_test = (millisecond_timestamp_t) test_value;
-  const unsigned int test_int = (unsigned int) test_value;
-  const unsigned char test_ch = (unsigned char) test_value;
-
   /**
   * Operating system/cpu architecture validations
   * If any of these fail, things don't behave the code expects
@@ -407,12 +442,7 @@ int is_platform_supported_by_libvoltronic(void) {
     (sizeof(int) >= 2) &&
     (sizeof(unsigned int) >= 2) &&
     (sizeof(voltronic_crc_t) == 2) &&
-    (sizeof(millisecond_timestamp_t) >= 4) &&
-    (test_value == -1) &&
-    (crc_test >= 0) &&
-    (timestamp_test >= 0) &&
-    (test_int >= 0) &&
-    (test_ch >= 0)) {
+    (sizeof(millisecond_timestamp_t) >= 4)) {
 
     return 1;
   } else {
