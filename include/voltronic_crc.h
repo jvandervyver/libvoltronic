@@ -7,7 +7,7 @@
    * The underlying numeric type used to store the CRC
    */
   #if defined(_WIN32) || defined(WIN32)
-    #include <Windows.h>
+    #include "windows.h"
 
     typedef unsigned __int16 voltronic_crc_t;
   #else

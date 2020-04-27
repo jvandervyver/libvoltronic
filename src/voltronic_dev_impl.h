@@ -15,7 +15,7 @@
   * Write error states to operating specific error handler
   */
   #if defined(_WIN32) || defined(WIN32)
-    #include <Windows.h>
+    #include "windows.h"
 
     #define SET_LAST_ERROR(__val__) SetLastError((__val__));
   #else
