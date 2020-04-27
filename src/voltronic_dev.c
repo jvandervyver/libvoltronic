@@ -33,25 +33,18 @@
 
 #endif
 
-#ifndef FALSE
-  #define FALSE 0
-#endif
-
-#ifndef TRUE
-  #define TRUE  1
-#endif
-
-#ifndef CRC_ON_WRITE
-  #define CRC_ON_WRITE  TRUE
-#endif
-
-#ifndef CRC_ON_READ
-  #define CRC_ON_READ   TRUE
-#endif
-
 #define END_OF_INPUT '\r'
 #define END_OF_INPUT_SIZE sizeof(char)
 #define NON_DATA_SIZE (sizeof(voltronic_crc_t) + END_OF_INPUT_SIZE)
+
+#define WRITE_CRC_ON_EXECUTE_VALUE   (1 << 1)
+#define READ_CRC_ON_EXECUTE_VALUE    (1 << 2)
+#define VERIFY_CRC_ON_EXECUTE_VALUE  (1 << 3)
+
+#define DEFAULT_OPTIONS ( \
+  WRITE_CRC_ON_EXECUTE_VALUE | \
+  READ_CRC_ON_EXECUTE_VALUE | \
+  VERIFY_CRC_ON_EXECUTE_VALUE)
 
 #if defined(_WIN32) || defined(WIN32)
 
@@ -78,6 +71,7 @@ struct voltronic_dev_struct_t {
   const voltronic_dev_read_f read;
   const voltronic_dev_write_f write;
   const voltronic_dev_close_f close;
+  unsigned int options;
 };
 
 voltronic_dev_t voltronic_dev_create(
@@ -98,7 +92,8 @@ voltronic_dev_t voltronic_dev_create(
           impl_ptr,
           read_function,
           write_function,
-          close_function };
+          close_function,
+          DEFAULT_OPTIONS };
 
         COPY_MEMORY(dev, &dev_struct, sizeof(struct voltronic_dev_struct_t));
       }
@@ -160,6 +155,75 @@ int voltronic_dev_write(
 
   SET_INVALID_INPUT();
   return -1;
+}
+
+static unsigned int get_voltronic_opt_mask(
+  const voltronic_dev_opt_t opt) {
+
+  switch(opt){
+    case WRITE_CRC_ON_EXECUTE:
+      return WRITE_CRC_ON_EXECUTE_VALUE;
+
+    case READ_CRC_ON_EXECUTE:
+      return READ_CRC_ON_EXECUTE_VALUE;
+
+    case VERIFY_CRC_ON_EXECUTE:
+      return VERIFY_CRC_ON_EXECUTE_VALUE;
+
+    default:
+      return 0;
+  }
+}
+
+int is_voltronic_dev_opt_set(
+  const voltronic_dev_t dev,
+  const voltronic_dev_opt_t opt) {
+
+  if (dev != 0) {
+    const unsigned int value = get_voltronic_opt_mask(opt);
+    if (value != 0) {
+      if (dev->options & value) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  SET_INVALID_INPUT();
+  return -1;
+}
+
+int set_voltronic_dev_opt(
+  const voltronic_dev_t dev,
+  const voltronic_dev_opt_t opt) {
+
+  if (dev != 0) {
+    const unsigned int value = get_voltronic_opt_mask(opt);
+    if (value != 0) {
+      dev->options |= value;
+      return 1;
+    }
+  }
+
+  SET_INVALID_INPUT();
+  return 0;
+}
+
+int unset_voltronic_dev_opt(
+  const voltronic_dev_t dev,
+  const voltronic_dev_opt_t opt) {
+
+  if (dev != 0) {
+    const unsigned int value = get_voltronic_opt_mask(opt);
+    if (value != 0) {
+      dev->options &= ~value;
+      return 1;
+    }
+  }
+
+  SET_INVALID_INPUT();
+  return 0;
 }
 
 int voltronic_dev_close(voltronic_dev_t dev) {
@@ -241,34 +305,33 @@ static int voltronic_receive_data(
     timeout_milliseconds);
 
   if (result >= 0) {
-    #if defined(CRC_ON_READ) && (CRC_ON_READ == TRUE)
-
+    if (dev->options & READ_CRC_ON_EXECUTE_VALUE) {
       if (((size_t) result) >= NON_DATA_SIZE) {
         const size_t data_size = result - NON_DATA_SIZE;
         const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
         const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
         buffer[data_size] = 0;
 
-        if (read_crc == calculated_crc) {
+        if ((dev->options & VERIFY_CRC_ON_EXECUTE_VALUE) ||
+            (read_crc == calculated_crc)) {
+
           return data_size;
         }
       }
 
       SET_CRC_ERROR();
-      return -1;
-
-    #else
-
+    } else {
       if (((size_t) result) >= END_OF_INPUT_SIZE) {
         const size_t data_size = result - END_OF_INPUT_SIZE;
         buffer[data_size] = 0;
         return data_size;
       }
-
-    #endif
+    }
   } else {
     return result;
   }
+
+  return -1;
 }
 
 static int voltronic_write_data_loop(
@@ -309,47 +372,33 @@ static int voltronic_send_data(
     const size_t buffer_length,
     const unsigned int timeout_milliseconds) {
 
-  #if defined(CRC_ON_WRITE) && (CRC_ON_WRITE == TRUE)
-
+  size_t copy_length;
+  char* copy;
+  if (dev->options & WRITE_CRC_ON_EXECUTE_VALUE) {
     const voltronic_crc_t crc = calculate_voltronic_crc(buffer, buffer_length);
 
-    const size_t copy_length = buffer_length + NON_DATA_SIZE;
-    char* copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
-    COPY_MEMORY(copy, buffer, buffer_length * sizeof(char));
+    copy_length = buffer_length + NON_DATA_SIZE;
+    copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
 
     write_voltronic_crc(crc, &copy[buffer_length], NON_DATA_SIZE);
-    copy[copy_length - 1] = END_OF_INPUT;
+  } else {
+    copy_length = buffer_length + END_OF_INPUT_SIZE;
+    copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
+  }
 
-    const int result = voltronic_write_data_loop(
+  COPY_MEMORY(copy, buffer, buffer_length * sizeof(char));
+  copy[copy_length - 1] = END_OF_INPUT;
+
+  const int result = voltronic_write_data_loop(
       dev,
       copy,
       copy_length,
       timeout_milliseconds);
 
-    FREE_MEMORY(copy);
+  FREE_MEMORY(copy);
 
-    return result;
+  return result;
 
-  #else
-
-    const size_t copy_length = buffer_length + END_OF_INPUT_SIZE;
-    char* copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
-    COPY_MEMORY(copy, buffer, buffer_length * sizeof(char));
-
-    write_voltronic_crc(crc, &copy[buffer_length], END_OF_INPUT_SIZE);
-    copy[copy_length - 1] = END_OF_INPUT;
-
-    const int result = voltronic_write_data_loop(
-      dev,
-      copy,
-      copy_length,
-      timeout_milliseconds);
-
-    FREE_MEMORY(copy);
-
-    return result;
-
-  #endif
 }
 
 int voltronic_dev_execute(

@@ -3,18 +3,19 @@
 
   #include <stddef.h>
 
-  #ifndef FALSE
-    #define FALSE 0
-  #endif
-
-  #ifndef TRUE
-    #define TRUE  1
-  #endif
-
   /**
    * Opaque pointer to a voltronic device
    */
   typedef struct voltronic_dev_struct_t* voltronic_dev_t;
+
+  /**
+   * Configuration options for dev
+   */
+  typedef enum {
+    WRITE_CRC_ON_EXECUTE,  // default: enabled
+    READ_CRC_ON_EXECUTE,   // default: enabled
+    VERIFY_CRC_ON_EXECUTE  // default: enabled; if READ_CRC_ON_EXECUTE disabled this is implicitly disabled
+  } voltronic_dev_opt_t;
 
   /**
    * Read bytes from a voltronic device
@@ -37,7 +38,7 @@
     const unsigned int timeout_milliseconds);
 
   /**
-   * Read bytes to a voltronic device
+   * Write bytes to a voltronic device
    *
    * dev -> Opaque device pointer
    * buffer -> Buffer of bytes to write to device
@@ -57,14 +58,40 @@
     const unsigned int timeout_milliseconds);
 
   /**
-   * Enable appending a CRC voltronic_dev_execute writes
+   * Determine if a option is set for the dev
+   * 
+   * dev -> Opaque device pointer
+   * opt -> Option
+   *
+   * Returns 0 if disable, 1 if enabled, -1 on error
    */
-  #define CRC_ON_WRITE  TRUE
+  int is_voltronic_dev_opt_set(
+    const voltronic_dev_t dev,
+    const voltronic_dev_opt_t opt);
 
   /**
-   * Enable validating CRC on voltronic_dev_execute reads
+   * Enable an option on a dev
+   *
+   * dev -> Opaque device pointer
+   * opt -> Option
+   *
+   * Returns 1 on success, -1 on error
    */
-  #define CRC_ON_READ   TRUE
+  int set_voltronic_dev_opt(
+    const voltronic_dev_t dev,
+    const voltronic_dev_opt_t opt);
+
+  /**
+   * Disable an option on a dev
+   *
+   * dev -> Opaque device pointer
+   * opt -> Option
+   *
+   * Returns 1 on success, -1 on error
+   */
+  int unset_voltronic_dev_opt(
+    const voltronic_dev_t dev,
+    const voltronic_dev_opt_t opt);
 
   /**
    * Write a command to the device and wait for a response from the device
@@ -95,6 +122,5 @@
    */
   int voltronic_dev_close(
     voltronic_dev_t dev);
-
 
 #endif
