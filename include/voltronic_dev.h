@@ -12,9 +12,9 @@
    * Configuration options for dev
    */
   typedef enum {
-    WRITE_CRC_ON_EXECUTE,  // default: enabled
-    READ_CRC_ON_EXECUTE,   // default: enabled
-    VERIFY_CRC_ON_EXECUTE  // default: enabled; if READ_CRC_ON_EXECUTE disabled this is implicitly disabled
+    VOLTRONIC_WRITE_CRC_ON_EXECUTE,  // default: enabled
+    VOLTRONIC_READ_CRC_ON_EXECUTE,   // default: enabled
+    VOLTRONIC_VERIFY_CRC_ON_EXECUTE  // default: enabled; if READ_CRC_ON_EXECUTE disabled this is implicitly disabled
   } voltronic_dev_opt_t;
 
   /**

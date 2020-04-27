@@ -161,13 +161,13 @@ static unsigned int get_voltronic_opt_mask(
   const voltronic_dev_opt_t opt) {
 
   switch(opt){
-    case WRITE_CRC_ON_EXECUTE:
+    case VOLTRONIC_WRITE_CRC_ON_EXECUTE:
       return WRITE_CRC_ON_EXECUTE_VALUE;
 
-    case READ_CRC_ON_EXECUTE:
+    case VOLTRONIC_READ_CRC_ON_EXECUTE:
       return READ_CRC_ON_EXECUTE_VALUE;
 
-    case VERIFY_CRC_ON_EXECUTE:
+    case VOLTRONIC_VERIFY_CRC_ON_EXECUTE:
       return VERIFY_CRC_ON_EXECUTE_VALUE;
 
     default:
