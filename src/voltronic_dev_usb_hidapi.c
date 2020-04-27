@@ -6,7 +6,7 @@
 #include <wchar.h>
 
 #if defined(_WIN32) || defined(WIN32)
-  #include <Windows.h>
+  #include "windows.h"
 #else
   #include <stdint.h>
 #endif
