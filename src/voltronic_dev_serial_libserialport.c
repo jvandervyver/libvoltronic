@@ -47,6 +47,8 @@ voltronic_dev_t voltronic_serial_create(
     if (impl_ptr != 0) {
       if ((sp_result = sp_open(VOLTRONIC_DEV_SP(impl_ptr), SP_MODE_READ_WRITE)) == SP_OK) {
         if (voltronic_dev_serial_configure(impl_ptr, baud_rate, data_bits, stop_bits, parity) > 0) {
+          sp_flush(VOLTRONIC_DEV_SP(impl_ptr), SP_BUF_BOTH);
+
           return voltronic_dev_create(
             impl_ptr,
             &voltronic_dev_serial_read,&voltronic_dev_serial_write,
