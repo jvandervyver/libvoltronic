@@ -68,34 +68,18 @@ static millisecond_timestamp_t get_millisecond_timestamp(void);
 
 struct voltronic_dev_struct_t {
   void* impl_ptr;
-  const voltronic_dev_read_f read;
-  const voltronic_dev_write_f write;
-  const voltronic_dev_close_f close;
   unsigned int options;
 };
 
-voltronic_dev_t voltronic_dev_create(
-    void* impl_ptr,
-    const voltronic_dev_read_f read_function,
-    const voltronic_dev_write_f write_function,
-    const voltronic_dev_close_f close_function) {
-
+voltronic_dev_t voltronic_dev_internal_create(void* impl_ptr) {
   if (is_platform_supported_by_libvoltronic()) {
-    if ((impl_ptr != 0) &&
-      (read_function != 0) &&
-      (write_function != 0) &&
-      (close_function != 0)) {
+    if (impl_ptr != 0) {
+      voltronic_dev_t dev = (voltronic_dev_t)
+        ALLOCATE_MEMORY(sizeof(struct voltronic_dev_struct_t));
 
-      voltronic_dev_t dev = (voltronic_dev_t) ALLOCATE_MEMORY(sizeof(struct voltronic_dev_struct_t));
       if (dev != 0) {
-        const struct voltronic_dev_struct_t dev_struct = {
-          impl_ptr,
-          read_function,
-          write_function,
-          close_function,
-          DEFAULT_OPTIONS };
-
-        COPY_MEMORY(dev, &dev_struct, sizeof(struct voltronic_dev_struct_t));
+        dev->impl_ptr = impl_ptr;
+        dev->options = DEFAULT_OPTIONS;
       }
 
       return dev;
@@ -108,24 +92,19 @@ voltronic_dev_t voltronic_dev_create(
 }
 
 int voltronic_dev_read(
-    const voltronic_dev_t dev,
-    char* buffer,
-    const size_t buffer_size,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  char* buffer,
+  const size_t buffer_size,
+  const unsigned int timeout_milliseconds) {
 
   if (dev != 0 && buffer != 0 && buffer_size > 0) {
-    const voltronic_dev_read_f read_function = dev->read;
-    void* impl_ptr = dev->impl_ptr;
+    const int result = voltronic_dev_impl_read(
+      dev->impl_ptr,
+      buffer,
+      buffer_size,
+      timeout_milliseconds);
 
-    if (read_function != 0) {
-      const int result = read_function(
-        impl_ptr,
-        buffer,
-        buffer_size,
-        timeout_milliseconds);
-
-      return result >= 0 ? result : -1;
-    }
+    return result >= 0 ? result : -1;
   }
 
   SET_INVALID_INPUT();
@@ -133,24 +112,19 @@ int voltronic_dev_read(
 }
 
 int voltronic_dev_write(
-    const voltronic_dev_t dev,
-    const char* buffer,
-    const size_t buffer_size,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  const char* buffer,
+  const size_t buffer_size,
+  const unsigned int timeout_milliseconds) {
 
   if (dev != 0 && buffer != 0 && buffer_size > 0) {
-    const voltronic_dev_write_f write_function = dev->write;
-    void* impl_ptr = dev->impl_ptr;
+    const int result = voltronic_dev_impl_write(
+      dev->impl_ptr,
+      buffer,
+      buffer_size,
+      timeout_milliseconds);
 
-    if (write_function != 0) {
-      const int result = write_function(
-        impl_ptr,
-        buffer,
-        buffer_size,
-        timeout_milliseconds);
-
-      return result >= 0 ? result : -1;
-    }
+    return result >= 0 ? result : -1;
   }
 
   SET_INVALID_INPUT();
@@ -228,16 +202,10 @@ int unset_voltronic_dev_opt(
 
 int voltronic_dev_close(voltronic_dev_t dev) {
   if (dev != 0) {
-    const voltronic_dev_close_f close_function = dev->close;
-    void* impl_ptr = dev->impl_ptr;
-
-    if (close_function != 0 && impl_ptr != 0) {
-      const int result = close_function(impl_ptr);
-      if (result > 0) {
-        dev->impl_ptr = 0;
-        FREE_MEMORY(dev);
-        return 1;
-      }
+    const int result = voltronic_dev_impl_close(&dev->impl_ptr);
+    if (result > 0) {
+      FREE_MEMORY(dev);
+      return 1;
     }
   }
 
@@ -246,10 +214,10 @@ int voltronic_dev_close(voltronic_dev_t dev) {
 }
 
 static int voltronic_read_data_loop(
-    const voltronic_dev_t dev,
-    char* buffer,
-    size_t buffer_length,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  char* buffer,
+  size_t buffer_length,
+  const unsigned int timeout_milliseconds) {
 
   unsigned int size = 0;
 
@@ -293,10 +261,10 @@ static int voltronic_read_data_loop(
 }
 
 static int voltronic_receive_data(
-    const voltronic_dev_t dev,
-    char* buffer,
-    const size_t buffer_length,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  char* buffer,
+  const size_t buffer_length,
+  const unsigned int timeout_milliseconds) {
 
   const int result = voltronic_read_data_loop(
     dev,
@@ -335,10 +303,10 @@ static int voltronic_receive_data(
 }
 
 static int voltronic_write_data_loop(
-    const voltronic_dev_t dev,
-    const char* buffer,
-    size_t buffer_length,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  const char* buffer,
+  size_t buffer_length,
+  const unsigned int timeout_milliseconds) {
 
   const millisecond_timestamp_t start_time = get_millisecond_timestamp();
   millisecond_timestamp_t elapsed = 0;
@@ -367,10 +335,10 @@ static int voltronic_write_data_loop(
 }
 
 static int voltronic_send_data(
-    const voltronic_dev_t dev,
-    const char* buffer,
-    const size_t buffer_length,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  const char* buffer,
+  const size_t buffer_length,
+  const unsigned int timeout_milliseconds) {
 
   size_t copy_length;
   char* copy;
@@ -402,12 +370,12 @@ static int voltronic_send_data(
 }
 
 int voltronic_dev_execute(
-    const voltronic_dev_t dev,
-    const char* send_buffer,
-    size_t send_buffer_length,
-    char* receive_buffer,
-    size_t receive_buffer_length,
-    const unsigned int timeout_milliseconds) {
+  const voltronic_dev_t dev,
+  const char* send_buffer,
+  size_t send_buffer_length,
+  char* receive_buffer,
+  size_t receive_buffer_length,
+  const unsigned int timeout_milliseconds) {
 
   const millisecond_timestamp_t start_time = get_millisecond_timestamp();
   millisecond_timestamp_t elapsed = 0;

@@ -6,20 +6,6 @@
 
 #define VOLTRONIC_DEV_SP(_impl_ptr_) ((struct sp_port*) (_impl_ptr_))
 
-static int voltronic_dev_serial_read(
-  void* impl_ptr,
-  char* buffer,
-  const size_t buffer_size,
-  const unsigned int timeout_milliseconds);
-
-static int voltronic_dev_serial_write(
-  void* impl_ptr,
-  const char* buffer,
-  const size_t buffer_size,
-  const unsigned int timeout_milliseconds);
-
-static int voltronic_dev_serial_close(void* impl_ptr);
-
 static int voltronic_dev_serial_configure(
     void* impl_ptr,
     const baud_rate_t baud_rate,
@@ -48,11 +34,7 @@ voltronic_dev_t voltronic_serial_create(
       if ((sp_result = sp_open(VOLTRONIC_DEV_SP(impl_ptr), SP_MODE_READ_WRITE)) == SP_OK) {
         if (voltronic_dev_serial_configure(impl_ptr, baud_rate, data_bits, stop_bits, parity) > 0) {
           sp_flush(VOLTRONIC_DEV_SP(impl_ptr), SP_BUF_BOTH);
-
-          return voltronic_dev_create(
-            impl_ptr,
-            &voltronic_dev_serial_read,&voltronic_dev_serial_write,
-            &voltronic_dev_serial_close);
+          return voltronic_dev_internal_create(impl_ptr);
         }
       }
 
@@ -63,40 +45,56 @@ voltronic_dev_t voltronic_serial_create(
   return 0;
 }
 
-static inline int voltronic_dev_serial_read(
+inline int voltronic_dev_impl_read(
     void* impl_ptr,
     char* buffer,
     const size_t buffer_size,
     const unsigned int timeout_milliseconds) {
 
-  return (int) sp_blocking_read_next(
-    VOLTRONIC_DEV_SP(impl_ptr),
-    (void*) buffer,
-    buffer_size,
-    (unsigned int) timeout_milliseconds);
+  if (impl_ptr != 0) {
+    return (int) sp_blocking_read_next(
+      VOLTRONIC_DEV_SP(impl_ptr),
+      (void*) buffer,
+      buffer_size,
+      (unsigned int) timeout_milliseconds);
+  } else {
+    SET_INVALID_INPUT();
+    return -1;
+  }
 }
 
-static inline int voltronic_dev_serial_write(
+inline int voltronic_dev_impl_write(
     void* impl_ptr,
     const char* buffer,
     const size_t buffer_size,
     const unsigned int timeout_milliseconds) {
 
-  return (int) sp_blocking_write(
-    VOLTRONIC_DEV_SP(impl_ptr),
-    (const void*) buffer,
-    buffer_size,
-    (unsigned int) timeout_milliseconds);
+  if (impl_ptr != 0) {
+    return (int) sp_blocking_write(
+      VOLTRONIC_DEV_SP(impl_ptr),
+      (const void*) buffer,
+      buffer_size,
+      (unsigned int) timeout_milliseconds);
+  } else {
+    SET_INVALID_INPUT();
+    return -1;
+  }
 }
 
-static int voltronic_dev_serial_close(void* impl_ptr) {
-  const enum sp_return result = sp_close(VOLTRONIC_DEV_SP(impl_ptr));
-  if (result == SP_OK) {
-    sp_free_port(VOLTRONIC_DEV_SP(impl_ptr));
-    return 1;
-  } else {
-    return 0;
+int voltronic_dev_impl_close(void** impl_ptr) {
+  if (impl_ptr != 0) {
+    struct sp_port* sp_port = VOLTRONIC_DEV_SP(*impl_ptr);
+    if (sp_port != 0) {
+      const enum sp_return result = sp_close(sp_port);
+      if (result == SP_OK) {
+        sp_free_port(sp_port);
+        *impl_ptr = 0;
+        return 1;
+      }
+    }
   }
+
+  return 0;
 }
 
 static inline int voltronic_dev_baud_rate(

@@ -10,17 +10,18 @@
    * ------------------------------------------------------------------
    */
 
-
-  /*
+  /**
   * Write error states to operating specific error handler
   */
   #if defined(_WIN32) || defined(WIN32)
     #include "windows.h"
 
     #define SET_LAST_ERROR(__val__) SetLastError((__val__));
+    #define SET_INVALID_INPUT() SET_LAST_ERROR(ERROR_INVALID_DATA)
   #else
     #include <errno.h>
 
+    #define SET_INVALID_INPUT() SET_LAST_ERROR(EINVAL)
     #define SET_LAST_ERROR(__val__) errno = (__val__);
   #endif
 
@@ -46,11 +47,11 @@
    *
    * On failure set the appropriate error using SET_LAST_ERROR
    */
-  typedef int (*voltronic_dev_read_f)(
-      void* impl_ptr,
-      char* buffer,
-      const size_t buffer_size,
-      const unsigned int timeout_milliseconds);
+  int voltronic_dev_impl_read(
+    void* impl_ptr,
+    char* buffer,
+    const size_t buffer_size,
+    const unsigned int timeout_milliseconds);
 
   /**
    * Write the provided buffer data to the device
@@ -65,11 +66,11 @@
    *
    * On failure set the appropriate error using SET_LAST_ERROR
    */
-  typedef int (*voltronic_dev_write_f)(
-      void* impl_ptr,
-      const char* buffer,
-      const size_t buffer_size,
-      const unsigned int timeout_milliseconds);
+  int voltronic_dev_impl_write(
+    void* impl_ptr,
+    const char* buffer,
+    const size_t buffer_size,
+    const unsigned int timeout_milliseconds);
 
   /**
    * Accept the implementation pointer and close the underlying device connection
@@ -78,24 +79,18 @@
    *
    * On failure set the appropriate error using SET_LAST_ERROR
    */
-  typedef int (*voltronic_dev_close_f)(
-      void* impl_ptr);
+  int voltronic_dev_impl_close(
+    void** impl_ptr);
 
   /**
    * Create the opaque pointer representing a connection to a physical voltronic device
    *
    * impl_ptr -> The underlying implementation's device pointer
-   * read_function -> Function to read from the physical device
-   * write_function -> Function to write to the physical device
-   * close_function -> Function to close the connection to the underlying device
    *
    * On failure sets the appropriate error using SET_LAST_ERROR
-   */ 
-  voltronic_dev_t voltronic_dev_create(
-      void* impl_ptr,
-      const voltronic_dev_read_f read_function,
-      const voltronic_dev_write_f write_function,
-      const voltronic_dev_close_f close_function);
+   */
+  voltronic_dev_t voltronic_dev_internal_create(
+    void* impl_ptr);
 
   /**
    * May change if operating system requires it.
@@ -104,7 +99,9 @@
     malloc(((size_t) (__size__)))
 
   #define COPY_MEMORY(__destination__, __source__, __size__) \
-    memcpy(((void*) (__destination__)), ((const void*) (__source__)), ((size_t) (__size__)))
+    memcpy(((void*) (__destination__)), \
+      ((const void*) (__source__)), \
+      ((size_t) (__size__)))
 
   #define FREE_MEMORY(__ptr__) \
     free(((void*) (__ptr__)))
