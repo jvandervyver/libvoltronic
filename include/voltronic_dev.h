@@ -6,16 +6,7 @@
   /**
    * Opaque pointer to a voltronic device
    */
-  typedef struct voltronic_dev_struct_t* voltronic_dev_t;
-
-  /**
-   * Configuration options for dev
-   */
-  typedef enum {
-    VOLTRONIC_WRITE_CRC_ON_EXECUTE,  // default: enabled
-    VOLTRONIC_READ_CRC_ON_EXECUTE,   // default: enabled
-    VOLTRONIC_VERIFY_CRC_ON_EXECUTE  // default: enabled; if READ_CRC_ON_EXECUTE disabled this is implicitly disabled
-  } voltronic_dev_opt_t;
+  typedef void* voltronic_dev_t;
 
   /**
    * Read bytes from a voltronic device
@@ -58,40 +49,12 @@
     const unsigned int timeout_milliseconds);
 
   /**
-   * Determine if a option is set for the dev
-   * 
-   * dev -> Opaque device pointer
-   * opt -> Option
-   *
-   * Returns 0 if disable, 1 if enabled, -1 on error
+   * Options for voltronic_dev_execute
    */
-  int is_voltronic_dev_opt_set(
-    const voltronic_dev_t dev,
-    const voltronic_dev_opt_t opt);
-
-  /**
-   * Enable an option on a dev
-   *
-   * dev -> Opaque device pointer
-   * opt -> Option
-   *
-   * Returns 1 on success, -1 on error
-   */
-  int set_voltronic_dev_opt(
-    const voltronic_dev_t dev,
-    const voltronic_dev_opt_t opt);
-
-  /**
-   * Disable an option on a dev
-   *
-   * dev -> Opaque device pointer
-   * opt -> Option
-   *
-   * Returns 1 on success, -1 on error
-   */
-  int unset_voltronic_dev_opt(
-    const voltronic_dev_t dev,
-    const voltronic_dev_opt_t opt);
+  #define VOLTRONIC_EXECUTE_DEFAULT_OPTIONS  0
+  #define DISABLE_WRITE_VOLTRONIC_CRC        1 << 0
+  #define DISABLE_PARSE_VOLTRONIC_CRC        1 << 1
+  #define DISABLE_VERIFY_VOLTRONIC_CRC       1 << 2
 
   /**
    * Write a command to the device and wait for a response from the device
@@ -102,6 +65,7 @@
    * receive_buffer -> Buffer where read bytes are written to
    * receive_buffer_length -> Maximum number of bytes to read
    * timeout_milliseconds -> Number of milliseconds to wait before giving up
+   * options -> See options above
    *
    * Returns 1 on success and 0 on failure
    *
@@ -109,6 +73,7 @@
    */
   int voltronic_dev_execute(
     const voltronic_dev_t dev,
+    const unsigned int options,
     const char* send_buffer,
     size_t send_buffer_length,
     char* receive_buffer,

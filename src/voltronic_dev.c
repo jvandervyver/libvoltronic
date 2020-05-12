@@ -13,12 +13,14 @@
 #elif defined(__APPLE__)
 
   #include <mach/mach_time.h>
+  #include <errno.h>
 
   typedef uint64_t millisecond_timestamp_t;
 
 #elif defined(ARDUINO)
 
   #include <Arduino.h>
+  #include <errno.h>
 
   typedef unsigned long millisecond_timestamp_t;
 
@@ -28,6 +30,7 @@
   #include <sys/time.h>
   #include <stdint.h>
   #include <unistd.h>
+  #include <errno.h>
 
   typedef uint64_t millisecond_timestamp_t;
 
@@ -37,17 +40,13 @@
 #define END_OF_INPUT_SIZE sizeof(char)
 #define NON_DATA_SIZE (sizeof(voltronic_crc_t) + END_OF_INPUT_SIZE)
 
-#define WRITE_CRC_ON_EXECUTE_VALUE   (1 << 1)
-#define READ_CRC_ON_EXECUTE_VALUE    (1 << 2)
-#define VERIFY_CRC_ON_EXECUTE_VALUE  (1 << 3)
-
-#define DEFAULT_OPTIONS ( \
-  WRITE_CRC_ON_EXECUTE_VALUE | \
-  READ_CRC_ON_EXECUTE_VALUE | \
-  VERIFY_CRC_ON_EXECUTE_VALUE)
+#define GET_IMPL_DEV(_voltronic_dev_t_) \
+  ((void*) (_voltronic_dev_t_))
 
 #if defined(_WIN32) || defined(WIN32)
 
+  #define SET_LAST_ERROR(__val__) SetLastError((__val__));
+  #define SET_INVALID_INPUT() SET_LAST_ERROR(ERROR_INVALID_DATA)
   #define SET_INVALID_INPUT() SET_LAST_ERROR(ERROR_INVALID_DATA)
   #define SET_TIMEOUT_REACHED() SET_LAST_ERROR(WAIT_TIMEOUT)
   #define SET_BUFFER_OVERFLOW() SET_LAST_ERROR(ERROR_INSUFFICIENT_BUFFER)
@@ -57,6 +56,8 @@
 #else
 
   #define SET_INVALID_INPUT() SET_LAST_ERROR(EINVAL)
+  #define SET_LAST_ERROR(__val__) errno = (__val__);
+  #define SET_INVALID_INPUT() SET_LAST_ERROR(EINVAL)
   #define SET_TIMEOUT_REACHED() SET_LAST_ERROR(ETIMEDOUT)
   #define SET_BUFFER_OVERFLOW() SET_LAST_ERROR(ENOBUFS)
   #define SET_CRC_ERROR() SET_LAST_ERROR(EBADMSG)
@@ -65,31 +66,7 @@
 #endif
 
 static millisecond_timestamp_t get_millisecond_timestamp(void);
-
-struct voltronic_dev_struct_t {
-  void* impl_ptr;
-  unsigned int options;
-};
-
-voltronic_dev_t voltronic_dev_internal_create(void* impl_ptr) {
-  if (is_platform_supported_by_libvoltronic()) {
-    if (impl_ptr != 0) {
-      voltronic_dev_t dev = (voltronic_dev_t)
-        ALLOCATE_MEMORY(sizeof(struct voltronic_dev_struct_t));
-
-      if (dev != 0) {
-        dev->impl_ptr = impl_ptr;
-        dev->options = DEFAULT_OPTIONS;
-      }
-
-      return dev;
-    } else {
-      SET_INVALID_INPUT();
-    }
-  }
-
-  return 0;
-}
+static int is_platform_supported_by_libvoltronic(void);
 
 int voltronic_dev_read(
   const voltronic_dev_t dev,
@@ -99,16 +76,16 @@ int voltronic_dev_read(
 
   if (dev != 0 && buffer != 0 && buffer_size > 0) {
     const int result = voltronic_dev_impl_read(
-      dev->impl_ptr,
+      GET_IMPL_DEV(dev),
       buffer,
       buffer_size,
       timeout_milliseconds);
 
     return result >= 0 ? result : -1;
+  } else {
+    SET_INVALID_INPUT();
+    return -1;
   }
-
-  SET_INVALID_INPUT();
-  return -1;
 }
 
 int voltronic_dev_write(
@@ -119,98 +96,26 @@ int voltronic_dev_write(
 
   if (dev != 0 && buffer != 0 && buffer_size > 0) {
     const int result = voltronic_dev_impl_write(
-      dev->impl_ptr,
+      GET_IMPL_DEV(dev),
       buffer,
       buffer_size,
       timeout_milliseconds);
 
     return result >= 0 ? result : -1;
+  } else {
+    SET_INVALID_INPUT();
+    return -1;
   }
-
-  SET_INVALID_INPUT();
-  return -1;
-}
-
-static unsigned int get_voltronic_opt_mask(
-  const voltronic_dev_opt_t opt) {
-
-  switch(opt){
-    case VOLTRONIC_WRITE_CRC_ON_EXECUTE:
-      return WRITE_CRC_ON_EXECUTE_VALUE;
-
-    case VOLTRONIC_READ_CRC_ON_EXECUTE:
-      return READ_CRC_ON_EXECUTE_VALUE;
-
-    case VOLTRONIC_VERIFY_CRC_ON_EXECUTE:
-      return VERIFY_CRC_ON_EXECUTE_VALUE;
-
-    default:
-      return 0;
-  }
-}
-
-int is_voltronic_dev_opt_set(
-  const voltronic_dev_t dev,
-  const voltronic_dev_opt_t opt) {
-
-  if (dev != 0) {
-    const unsigned int value = get_voltronic_opt_mask(opt);
-    if (value != 0) {
-      if (dev->options & value) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }
-  }
-
-  SET_INVALID_INPUT();
-  return -1;
-}
-
-int set_voltronic_dev_opt(
-  const voltronic_dev_t dev,
-  const voltronic_dev_opt_t opt) {
-
-  if (dev != 0) {
-    const unsigned int value = get_voltronic_opt_mask(opt);
-    if (value != 0) {
-      dev->options |= value;
-      return 1;
-    }
-  }
-
-  SET_INVALID_INPUT();
-  return 0;
-}
-
-int unset_voltronic_dev_opt(
-  const voltronic_dev_t dev,
-  const voltronic_dev_opt_t opt) {
-
-  if (dev != 0) {
-    const unsigned int value = get_voltronic_opt_mask(opt);
-    if (value != 0) {
-      dev->options &= ~value;
-      return 1;
-    }
-  }
-
-  SET_INVALID_INPUT();
-  return 0;
 }
 
 int voltronic_dev_close(voltronic_dev_t dev) {
   if (dev != 0) {
-    const int result = voltronic_dev_impl_close(&dev->impl_ptr);
-    if (result > 0) {
-      FREE_MEMORY(dev);
-      return 1;
-    }
+    const int result = voltronic_dev_impl_close(GET_IMPL_DEV(dev));
+    return result > 0 ? 1 : 0;
+  } else {
+    SET_INVALID_INPUT();
+    return 0;
   }
-
-  SET_INVALID_INPUT();
-  return 0;
 }
 
 static int voltronic_read_data_loop(
@@ -262,6 +167,7 @@ static int voltronic_read_data_loop(
 
 static int voltronic_receive_data(
   const voltronic_dev_t dev,
+  const unsigned int options,
   char* buffer,
   const size_t buffer_length,
   const unsigned int timeout_milliseconds) {
@@ -273,14 +179,14 @@ static int voltronic_receive_data(
     timeout_milliseconds);
 
   if (result >= 0) {
-    if (dev->options & READ_CRC_ON_EXECUTE_VALUE) {
+    if ((options & DISABLE_PARSE_VOLTRONIC_CRC) == 0) {
       if (((size_t) result) >= NON_DATA_SIZE) {
         const size_t data_size = result - NON_DATA_SIZE;
         const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
         const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
         buffer[data_size] = 0;
 
-        if ((dev->options & VERIFY_CRC_ON_EXECUTE_VALUE) ||
+        if (((options & DISABLE_VERIFY_VOLTRONIC_CRC) == 0) ||
             (read_crc == calculated_crc)) {
 
           return data_size;
@@ -336,13 +242,14 @@ static int voltronic_write_data_loop(
 
 static int voltronic_send_data(
   const voltronic_dev_t dev,
+  const unsigned int options,
   const char* buffer,
   const size_t buffer_length,
   const unsigned int timeout_milliseconds) {
 
   size_t copy_length;
   char* copy;
-  if (dev->options & WRITE_CRC_ON_EXECUTE_VALUE) {
+  if ((options & DISABLE_WRITE_VOLTRONIC_CRC) == 0) {
     const voltronic_crc_t crc = calculate_voltronic_crc(buffer, buffer_length);
 
     copy_length = buffer_length + NON_DATA_SIZE;
@@ -371,6 +278,7 @@ static int voltronic_send_data(
 
 int voltronic_dev_execute(
   const voltronic_dev_t dev,
+  const unsigned int options,
   const char* send_buffer,
   size_t send_buffer_length,
   char* receive_buffer,
@@ -383,6 +291,7 @@ int voltronic_dev_execute(
 
   result = voltronic_send_data(
     dev,
+    options,
     send_buffer,
     send_buffer_length,
     timeout_milliseconds);
@@ -392,6 +301,7 @@ int voltronic_dev_execute(
     if (elapsed < timeout_milliseconds) {
       result = voltronic_receive_data(
         dev,
+        options,
         receive_buffer,
         receive_buffer_length,
         timeout_milliseconds - elapsed);
@@ -402,6 +312,20 @@ int voltronic_dev_execute(
     } else {
       SET_TIMEOUT_REACHED();
     }
+  }
+
+  return 0;
+}
+
+voltronic_dev_t voltronic_dev_internal_create(void* impl_ptr) {
+  if (is_platform_supported_by_libvoltronic()) {
+    if (impl_ptr != 0) {
+      return ((voltronic_dev_t) (impl_ptr));
+    }
+  }
+
+  if (impl_ptr != 0) {
+    voltronic_dev_impl_close(impl_ptr);
   }
 
   return 0;
@@ -459,7 +383,7 @@ int voltronic_dev_execute(
 
 #endif
 
-int is_platform_supported_by_libvoltronic(void) {
+static int is_platform_supported_by_libvoltronic(void) {
   /**
   * Operating system/cpu architecture validations
   * If any of these fail, things don't behave the code expects

@@ -10,29 +10,7 @@
    * ------------------------------------------------------------------
    */
 
-  /**
-  * Write error states to operating specific error handler
-  */
-  #if defined(_WIN32) || defined(WIN32)
-    #include "windows.h"
-
-    #define SET_LAST_ERROR(__val__) SetLastError((__val__));
-    #define SET_INVALID_INPUT() SET_LAST_ERROR(ERROR_INVALID_DATA)
-  #else
-    #include <errno.h>
-
-    #define SET_INVALID_INPUT() SET_LAST_ERROR(EINVAL)
-    #define SET_LAST_ERROR(__val__) errno = (__val__);
-  #endif
-
   #include "voltronic_dev.h"
-
-  /**
-  * It is recommended you validate
-  * if (is_platform_supported_by_libvoltronic()) { ... }
-  * Before attempting to create a dev
-  */
-  int is_platform_supported_by_libvoltronic(void);
 
   /**
    * Read up to buffer_size bytes from the device
@@ -80,7 +58,7 @@
    * On failure set the appropriate error using SET_LAST_ERROR
    */
   int voltronic_dev_impl_close(
-    void** impl_ptr);
+    void* impl_ptr);
 
   /**
    * Create the opaque pointer representing a connection to a physical voltronic device

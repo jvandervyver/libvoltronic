@@ -25,7 +25,7 @@ int main() {
 
   // Query the device
   char buffer[128];
-  int result = voltronic_dev_execute(dev, command, strlen(command), buffer, sizeof(buffer), 1000);
+  int result = voltronic_dev_execute(dev, 0, command, strlen(command), buffer, sizeof(buffer), 1000);
   if (result > 0) {
     printf("Success on command %s, got %s\n", command, buffer);
   } else {
