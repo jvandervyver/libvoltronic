@@ -96,7 +96,7 @@ inline int voltronic_dev_impl_write(
 }
 
 inline int voltronic_dev_impl_close(void* impl_ptr) {
-  hid_close(VOLTRONIC_DEV_USB(*impl_ptr));
+  hid_close(VOLTRONIC_DEV_USB(impl_ptr));
   return 1;
 }
 
