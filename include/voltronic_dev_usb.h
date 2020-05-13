@@ -8,7 +8,6 @@
    *
    * vendor_id - Device vendor id to search for. ie. 0x0665
    * product_id - Device product id to search for. ie. 0x5161
-   * serial_number - Device serial number as determined by the USB controller.  NOTE: May not be the actual device serial number
    *
    * Returns an opaque pointer to a voltronic device or 0 if an error occurred
    *
@@ -16,7 +15,6 @@
    */
   voltronic_dev_t voltronic_usb_create(
     const unsigned int vendor_id,
-    const unsigned int product_id,
-    const char* serial_number);
+    const unsigned int product_id);
 
 #endif

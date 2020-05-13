@@ -84,4 +84,25 @@
   #define FREE_MEMORY(__ptr__) \
     free(((void*) (__ptr__)))
 
+  #if defined(_WIN32) || defined(WIN32)
+    #include "windows.h"
+
+    typedef DWORD last_error_t;
+
+    #define SET_LAST_ERROR(_last_error_value_)  SetLastError((_last_error_value_))
+    #define GET_LAST_ERROR()                    GetLastError()
+    #define SET_INVALID_INPUT()                 SET_LAST_ERROR(ERROR_INVALID_DATA)
+
+  #else
+
+    #include <errno.h>
+
+    typedef int last_error_t;
+
+    #define SET_LAST_ERROR(_errno__value_)  errno = (_errno__value_)
+    #define GET_LAST_ERROR()                (errno)
+    #define SET_INVALID_INPUT()             SET_LAST_ERROR(EINVAL)
+
+  #endif
+
 #endif

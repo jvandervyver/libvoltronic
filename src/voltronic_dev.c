@@ -13,14 +13,12 @@
 #elif defined(__APPLE__)
 
   #include <mach/mach_time.h>
-  #include <errno.h>
 
   typedef uint64_t millisecond_timestamp_t;
 
 #elif defined(ARDUINO)
 
   #include <Arduino.h>
-  #include <errno.h>
 
   typedef unsigned long millisecond_timestamp_t;
 
@@ -30,7 +28,6 @@
   #include <sys/time.h>
   #include <stdint.h>
   #include <unistd.h>
-  #include <errno.h>
 
   typedef uint64_t millisecond_timestamp_t;
 
@@ -45,23 +42,17 @@
 
 #if defined(_WIN32) || defined(WIN32)
 
-  #define SET_LAST_ERROR(__val__) SetLastError((__val__));
-  #define SET_INVALID_INPUT() SET_LAST_ERROR(ERROR_INVALID_DATA)
-  #define SET_INVALID_INPUT() SET_LAST_ERROR(ERROR_INVALID_DATA)
-  #define SET_TIMEOUT_REACHED() SET_LAST_ERROR(WAIT_TIMEOUT)
-  #define SET_BUFFER_OVERFLOW() SET_LAST_ERROR(ERROR_INSUFFICIENT_BUFFER)
-  #define SET_CRC_ERROR() SET_LAST_ERROR(ERROR_CRC)
-  #define SYSTEM_NOT_SUPPORTED() SET_LAST_ERROR(ERROR_CALL_NOT_IMPLEMENTED)
+  #define SET_TIMEOUT_REACHED()   SET_LAST_ERROR(WAIT_TIMEOUT)
+  #define SET_BUFFER_OVERFLOW()   SET_LAST_ERROR(ERROR_INSUFFICIENT_BUFFER)
+  #define SET_CRC_ERROR()         SET_LAST_ERROR(ERROR_CRC)
+  #define SYSTEM_NOT_SUPPORTED()  SET_LAST_ERROR(ERROR_CALL_NOT_IMPLEMENTED)
 
 #else
 
-  #define SET_INVALID_INPUT() SET_LAST_ERROR(EINVAL)
-  #define SET_LAST_ERROR(__val__) errno = (__val__);
-  #define SET_INVALID_INPUT() SET_LAST_ERROR(EINVAL)
-  #define SET_TIMEOUT_REACHED() SET_LAST_ERROR(ETIMEDOUT)
-  #define SET_BUFFER_OVERFLOW() SET_LAST_ERROR(ENOBUFS)
-  #define SET_CRC_ERROR() SET_LAST_ERROR(EBADMSG)
-  #define SYSTEM_NOT_SUPPORTED() SET_LAST_ERROR(ENOSYS)
+  #define SET_TIMEOUT_REACHED()   SET_LAST_ERROR(ETIMEDOUT)
+  #define SET_BUFFER_OVERFLOW()   SET_LAST_ERROR(ENOBUFS)
+  #define SET_CRC_ERROR()         SET_LAST_ERROR(EBADMSG)
+  #define SYSTEM_NOT_SUPPORTED()  SET_LAST_ERROR(ENOSYS)
 
 #endif
 

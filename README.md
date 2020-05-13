@@ -61,11 +61,10 @@ int main() {
 
 int main() {
   // Create a USB dev
-  const char* serial_number = 0; // Optional
-  voltronic_dev_t dev = voltronic_usb_create(0x0665, 0x5161, serial_number);
+  voltronic_dev_t dev = voltronic_usb_create(0x0665, 0x5161);
 
   if (dev == 0) {
-    printf("Could not open USB device with serial number %s\n", serial_number);
+    printf("Could not open USB device");
     return 1;
   }
 
