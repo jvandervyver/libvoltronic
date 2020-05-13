@@ -51,10 +51,10 @@
   /**
    * Options for voltronic_dev_execute
    */
-  #define VOLTRONIC_EXECUTE_DEFAULT_OPTIONS  0
-  #define DISABLE_WRITE_VOLTRONIC_CRC        1 << 0
-  #define DISABLE_PARSE_VOLTRONIC_CRC        1 << 1
-  #define DISABLE_VERIFY_VOLTRONIC_CRC       1 << 2
+  #define VOLTRONIC_EXECUTE_DEFAULT_OPTIONS  (0)
+  #define DISABLE_WRITE_VOLTRONIC_CRC        (1 << 0)
+  #define DISABLE_PARSE_VOLTRONIC_CRC        (1 << 1)
+  #define DISABLE_VERIFY_VOLTRONIC_CRC       (1 << 2)
 
   /**
    * Write a command to the device and wait for a response from the device
