@@ -65,7 +65,7 @@ int voltronic_dev_read(
   const size_t buffer_size,
   const unsigned int timeout_milliseconds) {
 
-  if (dev != 0 && buffer != 0 && buffer_size > 0) {
+  if (buffer_size > 0) {
     const int result = voltronic_dev_impl_read(
       GET_IMPL_DEV(dev),
       buffer,
@@ -74,8 +74,7 @@ int voltronic_dev_read(
 
     return result >= 0 ? result : -1;
   } else {
-    SET_INVALID_INPUT();
-    return -1;
+    return 0;
   }
 }
 
@@ -85,7 +84,7 @@ int voltronic_dev_write(
   const size_t buffer_size,
   const unsigned int timeout_milliseconds) {
 
-  if (dev != 0 && buffer != 0 && buffer_size > 0) {
+  if (buffer_size > 0) {
     const int result = voltronic_dev_impl_write(
       GET_IMPL_DEV(dev),
       buffer,
@@ -94,8 +93,7 @@ int voltronic_dev_write(
 
     return result >= 0 ? result : -1;
   } else {
-    SET_INVALID_INPUT();
-    return -1;
+    return 0;
   }
 }
 
@@ -173,7 +171,7 @@ static int voltronic_receive_data(
     if ((options & DISABLE_PARSE_VOLTRONIC_CRC) == 0) {
       if (((size_t) result) >= NON_DATA_SIZE) {
         const size_t data_size = result - NON_DATA_SIZE;
-        const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size], NON_DATA_SIZE);
+        const voltronic_crc_t read_crc = read_voltronic_crc(&buffer[data_size]);
         const voltronic_crc_t calculated_crc = calculate_voltronic_crc(buffer, data_size);
         buffer[data_size] = 0;
 
@@ -246,7 +244,7 @@ static int voltronic_send_data(
     copy_length = buffer_length + NON_DATA_SIZE;
     copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));
 
-    write_voltronic_crc(crc, &copy[buffer_length], NON_DATA_SIZE);
+    write_voltronic_crc(crc, &copy[buffer_length]);
   } else {
     copy_length = buffer_length + END_OF_INPUT_SIZE;
     copy = (char*) ALLOCATE_MEMORY(copy_length * sizeof(char));

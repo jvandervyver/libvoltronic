@@ -13,36 +13,29 @@
 
 int write_voltronic_crc(
   const voltronic_crc_t crc,
-  char* cstring_buffer,
-  const size_t buffer_length) {
+  char* cstring_buffer) {
 
-  if ((cstring_buffer != 0) &&
-      (buffer_length >= CRC_SIZE)) {
-
+  if (cstring_buffer != 0) {
     unsigned char* buffer =
       (unsigned char*) cstring_buffer;
 
     buffer[0] = (crc >> 8) & 0xFF;
     buffer[1] = crc & 0xFF;
+  } 
 
-    return CRC_SIZE;
-  } else {
-    return 0;
-  }
+  return CRC_SIZE;
 }
 
 voltronic_crc_t read_voltronic_crc(
-  const char* cstring_buffer,
-  const size_t buffer_length) {
+  const char* cstring_buffer) {
 
-  voltronic_crc_t crc = 0;
-  if (cstring_buffer != 0 && buffer_length >= CRC_SIZE) {
-    const unsigned char* buffer =
+  const unsigned char* buffer =
       (const unsigned char*) cstring_buffer;
 
-    crc |= (voltronic_crc_t) buffer[0] << 8;
-    crc |= (voltronic_crc_t) buffer[1];
-  }
+  voltronic_crc_t crc = 0;
+
+  crc |= (voltronic_crc_t) buffer[0] << 8;
+  crc |= (voltronic_crc_t) buffer[1];
 
   return crc;
 }
@@ -52,7 +45,7 @@ voltronic_crc_t calculate_voltronic_crc(
   size_t buffer_length) {
 
   voltronic_crc_t crc = 0;
-  if (cstring_buffer != 0 && buffer_length > 0) {
+  if (buffer_length > 0) {
 
     static const voltronic_crc_t crc_table[16] = {
       0x0000, 0x1021, 0x2042, 0x3063,
