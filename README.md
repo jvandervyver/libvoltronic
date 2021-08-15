@@ -21,11 +21,22 @@ All the interfaces share the same underlying communication protocol
 #include <string.h>
 
 int main() {
+  const char* command = "QPI";
+
   voltronic_dev_t dev = // See examples for Serial & USB below
 
   // Query the device
   char buffer[128];
-  int result = voltronic_dev_execute(dev, 0, command, strlen(command), buffer, sizeof(buffer), 1000);
+  int result = voltronic_dev_execute(
+    dev, // Pointer to the underlying device
+    0,   // Options; VOLTRONIC_EXECUTE_DEFAULT_OPTIONS, DISABLE_WRITE_VOLTRONIC_CRC, DISABLE_PARSE_VOLTRONIC_CRC, DISABLE_VERIFY_VOLTRONIC_CRC
+    command, // Command to execute on the inverter
+    strlen(command), // Length of the command
+    buffer, // Buffer to store the response
+    sizeof(buffer), // Maximum length of the buffer
+    1000  // Timeout milliseconds to wait before giving up on a response
+  );
+
   if (result > 0) {
     printf("Success on command %s, got %s\n", command, buffer);
   } else {
@@ -44,7 +55,12 @@ int main() {
 int main() {
   // Create a serial port dev
   voltronic_dev_t dev = voltronic_serial_create(
-    "/dev/tty.usbserial", 2400, DATA_BITS_EIGHT, STOP_BITS_ONE, SERIAL_PARITY_NONE);
+    "/dev/tty.usbserial", // Port
+    2400,                 // Baud rate; Integer > 0
+    DATA_BITS_EIGHT,      // Data bits; FIVE, SIX, SEVEN, EIGHT
+    STOP_BITS_ONE,        // Stop Bits; ONE, ONE_AND_ONE_HALF, TWO
+    SERIAL_PARITY_NONE    // Parity;    NONE, EVEN, ODD, MARK, SPACE
+  );
 
   if (dev == 0) {
     printf("Could not open serial port device\n");
@@ -55,13 +71,18 @@ int main() {
 }
 ```
 
+**See [serial port test code](https://github.com/jvandervyver/libvoltronic/blob/master/src/serial_main.c) for a complete example**
+
 ### USB
 ```c
 #include "voltronic_dev_usb.h"
 
 int main() {
   // Create a USB dev
-  voltronic_dev_t dev = voltronic_usb_create(0x0665, 0x5161);
+  voltronic_dev_t dev = voltronic_usb_create(
+    0x0665,  // USB Vendor ID
+    0x5161   // USB Product ID
+  );
 
   if (dev == 0) {
     printf("Could not open USB device");
@@ -71,6 +92,8 @@ int main() {
   // See usage example above
 }
 ```
+
+**See [usb test code](https://github.com/jvandervyver/libvoltronic/blob/master/src/usb_main.c) for a complete example**
 
 ## Communication protocol
 The communication protocol consists of the following format:
