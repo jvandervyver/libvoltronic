@@ -13,7 +13,8 @@
 
 int write_voltronic_crc(
   const voltronic_crc_t crc,
-  char* cstring_buffer) {
+  char* cstring_buffer
+) {
 
   if (cstring_buffer != 0) {
     unsigned char* buffer =
@@ -27,7 +28,8 @@ int write_voltronic_crc(
 }
 
 voltronic_crc_t read_voltronic_crc(
-  const char* cstring_buffer) {
+  const char* cstring_buffer
+) {
 
   const unsigned char* buffer =
       (const unsigned char*) cstring_buffer;
@@ -42,7 +44,8 @@ voltronic_crc_t read_voltronic_crc(
 
 voltronic_crc_t calculate_voltronic_crc(
   const char* cstring_buffer,
-  size_t buffer_length) {
+  size_t buffer_length
+) {
 
   voltronic_crc_t crc = 0;
   if (buffer_length > 0) {

@@ -16,15 +16,16 @@ static inline void voltronic_usb_init_hidapi(void);
 
 voltronic_dev_t voltronic_usb_create(
   const unsigned int vendor_id,
-  const unsigned int product_id) {
-
+  const unsigned int product_id
+) {
   voltronic_usb_init_hidapi();
 
   SET_LAST_ERROR(0);
   hid_device* dev = hid_open(
     (unsigned short) vendor_id,
     (unsigned short) product_id,
-    (const wchar_t*) 0);
+    (const wchar_t*) 0
+  );
 
   if (dev != 0) {
     SET_LAST_ERROR(0);
@@ -38,22 +39,23 @@ inline int voltronic_dev_impl_read(
   void* impl_ptr,
   char* buffer,
   const size_t buffer_size,
-  const unsigned int timeout_milliseconds) {
-
+  const unsigned int timeout_milliseconds
+) {
   SET_LAST_ERROR(0);
   return hid_read_timeout(
     VOLTRONIC_DEV_USB(impl_ptr),
     (unsigned char*) buffer,
     GET_REPORT_SIZE(buffer_size),
-    (int) timeout_milliseconds);
+    (int) timeout_milliseconds
+  );
 }
 
 inline int voltronic_dev_impl_write(
   void* impl_ptr,
   const char* buffer,
   const size_t buffer_size,
-  unsigned int timeout_milliseconds) {
-
+  unsigned int timeout_milliseconds
+) {
   ++timeout_milliseconds; // stop unused warnings
   const int write_size = GET_REPORT_SIZE(buffer_size);
   unsigned char write_buffer[HID_REPORT_SIZE + 1] = { 0 };
@@ -63,7 +65,8 @@ inline int voltronic_dev_impl_write(
   const int bytes_written = hid_write(
     VOLTRONIC_DEV_USB(impl_ptr),
     (const unsigned char*) write_buffer,
-    (size_t) (HID_REPORT_SIZE + 1));
+    (size_t) (HID_REPORT_SIZE + 1)
+  );
 
   return GET_REPORT_SIZE(bytes_written);
 }

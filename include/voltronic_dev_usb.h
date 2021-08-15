@@ -15,6 +15,7 @@
    */
   voltronic_dev_t voltronic_usb_create(
     const unsigned int vendor_id,
-    const unsigned int product_id);
+    const unsigned int product_id
+  );
 
 #endif

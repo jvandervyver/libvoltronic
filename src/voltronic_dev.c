@@ -63,14 +63,16 @@ int voltronic_dev_read(
   const voltronic_dev_t dev,
   char* buffer,
   const size_t buffer_size,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   if (buffer_size > 0) {
     const int result = voltronic_dev_impl_read(
       GET_IMPL_DEV(dev),
       buffer,
       buffer_size,
-      timeout_milliseconds);
+      timeout_milliseconds
+    );
 
     return result >= 0 ? result : -1;
   } else {
@@ -82,14 +84,16 @@ int voltronic_dev_write(
   const voltronic_dev_t dev,
   const char* buffer,
   const size_t buffer_size,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   if (buffer_size > 0) {
     const int result = voltronic_dev_impl_write(
       GET_IMPL_DEV(dev),
       buffer,
       buffer_size,
-      timeout_milliseconds);
+      timeout_milliseconds
+    );
 
     return result >= 0 ? result : -1;
   } else {
@@ -111,7 +115,8 @@ static int voltronic_read_data_loop(
   const voltronic_dev_t dev,
   char* buffer,
   size_t buffer_length,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   unsigned int size = 0;
 
@@ -123,7 +128,8 @@ static int voltronic_read_data_loop(
       dev,
       buffer,
       buffer_length,
-      timeout_milliseconds - elapsed);
+      timeout_milliseconds - elapsed
+    );
 
     if (bytes_read >= 0) {
       while(bytes_read) {
@@ -159,13 +165,15 @@ static int voltronic_receive_data(
   const unsigned int options,
   char* buffer,
   const size_t buffer_length,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   const int result = voltronic_read_data_loop(
     dev,
     buffer,
     buffer_length,
-    timeout_milliseconds);
+    timeout_milliseconds
+  );
 
   if (result >= 0) {
     if ((options & DISABLE_PARSE_VOLTRONIC_CRC) == 0) {
@@ -201,14 +209,20 @@ static int voltronic_write_data_loop(
   const voltronic_dev_t dev,
   const char* buffer,
   size_t buffer_length,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   const millisecond_timestamp_t start_time = get_millisecond_timestamp();
   millisecond_timestamp_t elapsed = 0;
 
   int bytes_left = buffer_length;
   while(1) {
-    const int write_result = voltronic_dev_write(dev, buffer, bytes_left, timeout_milliseconds);
+    const int write_result = voltronic_dev_write(
+      dev,
+      buffer,
+      bytes_left,
+      timeout_milliseconds
+    );
 
     if (write_result >= 0) {
       bytes_left -= write_result;
@@ -234,7 +248,8 @@ static int voltronic_send_data(
   const unsigned int options,
   const char* buffer,
   const size_t buffer_length,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   size_t copy_length;
   char* copy;
@@ -254,10 +269,11 @@ static int voltronic_send_data(
   copy[copy_length - 1] = END_OF_INPUT;
 
   const int result = voltronic_write_data_loop(
-      dev,
-      copy,
-      copy_length,
-      timeout_milliseconds);
+    dev,
+    copy,
+    copy_length,
+    timeout_milliseconds
+  );
 
   FREE_MEMORY(copy);
 
@@ -272,7 +288,8 @@ int voltronic_dev_execute(
   size_t send_buffer_length,
   char* receive_buffer,
   size_t receive_buffer_length,
-  const unsigned int timeout_milliseconds) {
+  const unsigned int timeout_milliseconds
+) {
 
   const millisecond_timestamp_t start_time = get_millisecond_timestamp();
   millisecond_timestamp_t elapsed = 0;
@@ -283,7 +300,8 @@ int voltronic_dev_execute(
     options,
     send_buffer,
     send_buffer_length,
-    timeout_milliseconds);
+    timeout_milliseconds
+  );
 
   if (result > 0) {
     elapsed = get_millisecond_timestamp() - start_time;
@@ -293,7 +311,8 @@ int voltronic_dev_execute(
         options,
         receive_buffer,
         receive_buffer_length,
-        timeout_milliseconds - elapsed);
+        timeout_milliseconds - elapsed
+      );
 
       if (result > 0) {
         return result;

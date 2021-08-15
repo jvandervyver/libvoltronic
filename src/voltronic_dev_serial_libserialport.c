@@ -9,15 +9,16 @@ static int voltronic_dev_serial_configure(
   const baud_rate_t baud_rate,
   const data_bits_t data_bits,
   const stop_bits_t stop_bits,
-  const serial_parity_t parity);
+  const serial_parity_t parity
+);
 
 voltronic_dev_t voltronic_serial_create(
-    const char* name,
-    const baud_rate_t baud_rate,
-    const data_bits_t data_bits,
-    const stop_bits_t stop_bits,
-    const serial_parity_t parity) {
-
+  const char* name,
+  const baud_rate_t baud_rate,
+  const data_bits_t data_bits,
+  const stop_bits_t stop_bits,
+  const serial_parity_t parity
+) {
   enum sp_return sp_result;
   struct sp_port* port = 0;
   if (name != 0) {
@@ -48,31 +49,33 @@ voltronic_dev_t voltronic_serial_create(
 }
 
 inline int voltronic_dev_impl_read(
-    void* impl_ptr,
-    char* buffer,
-    const size_t buffer_size,
-    const unsigned int timeout_milliseconds) {
-
+  void* impl_ptr,
+  char* buffer,
+  const size_t buffer_size,
+  const unsigned int timeout_milliseconds
+) {
   SET_LAST_ERROR(0);
   return (int) sp_blocking_read_next(
     VOLTRONIC_DEV_SP(impl_ptr),
     (void*) buffer,
     buffer_size,
-    (unsigned int) timeout_milliseconds);
+    (unsigned int) timeout_milliseconds
+  );
 }
 
 inline int voltronic_dev_impl_write(
-    void* impl_ptr,
-    const char* buffer,
-    const size_t buffer_size,
-    const unsigned int timeout_milliseconds) {
-
+  void* impl_ptr,
+  const char* buffer,
+  const size_t buffer_size,
+  const unsigned int timeout_milliseconds
+) {
   SET_LAST_ERROR(0);
   return (int) sp_blocking_write(
     VOLTRONIC_DEV_SP(impl_ptr),
     (const void*) buffer,
     buffer_size,
-    (unsigned int) timeout_milliseconds);
+    (unsigned int) timeout_milliseconds
+  );
 }
 
 inline int voltronic_dev_impl_close(void* impl_ptr) {
@@ -88,14 +91,14 @@ inline int voltronic_dev_impl_close(void* impl_ptr) {
 }
 
 static inline int voltronic_dev_baud_rate(
-  const baud_rate_t baud_rate) {
-
+  const baud_rate_t baud_rate
+) {
   return (int) baud_rate;
 }
 
 static inline int voltronic_dev_data_bits(
-  const data_bits_t data_bits) {
-
+  const data_bits_t data_bits
+) {
   switch(data_bits){
     case DATA_BITS_FIVE: return 5;
     case DATA_BITS_SIX: return 6;
@@ -106,8 +109,8 @@ static inline int voltronic_dev_data_bits(
 }
 
 static inline int voltronic_dev_stop_bits(
-  const stop_bits_t stop_bits) {
-
+  const stop_bits_t stop_bits
+) {
   switch(stop_bits){
     case STOP_BITS_ONE: return 1;
     case STOP_BITS_TWO: return 2;
@@ -117,8 +120,8 @@ static inline int voltronic_dev_stop_bits(
 }
 
 static inline enum sp_parity voltronic_dev_serial_parity(
-    const serial_parity_t parity) {
-
+  const serial_parity_t parity
+) {
   switch(parity){
     case SERIAL_PARITY_NONE: return SP_PARITY_NONE;
     case SERIAL_PARITY_ODD: return SP_PARITY_ODD;
@@ -134,8 +137,8 @@ static int voltronic_dev_serial_configure(
   const baud_rate_t baud_rate,
   const data_bits_t data_bits,
   const stop_bits_t stop_bits,
-  const serial_parity_t parity) {
-
+  const serial_parity_t parity
+) {
   const int sp_baud_rate = voltronic_dev_baud_rate(baud_rate);
   const int sp_data_bits = voltronic_dev_data_bits(data_bits);
   const int sp_stop_bits = voltronic_dev_stop_bits(stop_bits);

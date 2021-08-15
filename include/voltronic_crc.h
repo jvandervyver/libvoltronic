@@ -26,7 +26,8 @@
    */
   int write_voltronic_crc(
     const voltronic_crc_t crc,
-    char* buffer);
+    char* buffer
+  );
 
   /**
    * Read a voltronic_crc_t from a buffer
@@ -49,6 +50,7 @@
    */
   voltronic_crc_t calculate_voltronic_crc(
     const char* buffer,
-    size_t buffer_length);
+    size_t buffer_length
+  );
 
 #endif

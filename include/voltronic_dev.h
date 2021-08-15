@@ -26,7 +26,8 @@
     const voltronic_dev_t dev,
     char* buffer,
     const size_t buffer_size,
-    const unsigned int timeout_milliseconds);
+    const unsigned int timeout_milliseconds
+  );
 
   /**
    * Write bytes to a voltronic device
@@ -46,7 +47,8 @@
     const voltronic_dev_t dev,
     const char* buffer,
     const size_t buffer_size,
-    const unsigned int timeout_milliseconds);
+    const unsigned int timeout_milliseconds
+  );
 
   /**
    * Options for voltronic_dev_execute
@@ -78,14 +80,14 @@
     size_t send_buffer_length,
     char* receive_buffer,
     size_t receive_buffer_length,
-    const unsigned int timeout_milliseconds);
+    const unsigned int timeout_milliseconds
+  );
 
   /**
    * Close the connection to the device
    *
    * dev -> Opaque device pointer
    */
-  int voltronic_dev_close(
-    voltronic_dev_t dev);
+  int voltronic_dev_close(voltronic_dev_t dev);
 
 #endif

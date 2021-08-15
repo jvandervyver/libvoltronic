@@ -21,14 +21,16 @@ int main() {
     dev,
     "\r",
     1,
-    1000);
+    1000
+  );
 
   // Read (NAK
   result = voltronic_dev_read(
     dev,
     buffer,
     sizeof(buffer),
-    1000);
+    1000
+  );
 
   // Query the device a bunch of ways to cover all code branches
   result = voltronic_dev_execute(dev, DISABLE_WRITE_VOLTRONIC_CRC, "QPI", 3, buffer, sizeof(buffer), 1000);

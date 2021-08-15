@@ -8,7 +8,12 @@
 int main() {
   // Create a serial port dev
   voltronic_dev_t dev = voltronic_serial_create(
-    "invalid_name", 2400, DATA_BITS_EIGHT, STOP_BITS_ONE, SERIAL_PARITY_NONE);
+    "invalid_name",
+    2400,
+    DATA_BITS_EIGHT,
+    STOP_BITS_ONE,
+    SERIAL_PARITY_NONE
+  );
 
   if (dev == 0) {
     exit(1);
@@ -22,14 +27,16 @@ int main() {
     dev,
     "\r",
     1,
-    1000);
+    1000
+  );
 
   // Read (NAK
   result = voltronic_dev_read(
     dev,
     buffer,
     sizeof(buffer),
-    1000);
+    1000
+  );
 
   // Query the device a bunch of ways to cover all code branches
   result = voltronic_dev_execute(dev, DISABLE_WRITE_VOLTRONIC_CRC, "QPI", 3, buffer, sizeof(buffer), 1000);

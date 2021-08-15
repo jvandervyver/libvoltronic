@@ -29,7 +29,8 @@
     void* impl_ptr,
     char* buffer,
     const size_t buffer_size,
-    const unsigned int timeout_milliseconds);
+    const unsigned int timeout_milliseconds
+  );
 
   /**
    * Write the provided buffer data to the device
@@ -48,7 +49,8 @@
     void* impl_ptr,
     const char* buffer,
     const size_t buffer_size,
-    const unsigned int timeout_milliseconds);
+    const unsigned int timeout_milliseconds
+  );
 
   /**
    * Accept the implementation pointer and close the underlying device connection
@@ -58,7 +60,8 @@
    * On failure set the appropriate error using SET_LAST_ERROR
    */
   int voltronic_dev_impl_close(
-    void* impl_ptr);
+    void* impl_ptr
+  );
 
   /**
    * Create the opaque pointer representing a connection to a physical voltronic device
@@ -68,7 +71,8 @@
    * On failure sets the appropriate error using SET_LAST_ERROR
    */
   voltronic_dev_t voltronic_dev_internal_create(
-    void* impl_ptr);
+    void* impl_ptr
+  );
 
   /**
    * May change if operating system requires it.
@@ -99,9 +103,9 @@
 
     typedef int last_error_t;
 
-    #define SET_LAST_ERROR(_errno__value_)  errno = (_errno__value_)
-    #define GET_LAST_ERROR()                (errno)
-    #define SET_INVALID_INPUT()             SET_LAST_ERROR(EINVAL)
+    #define SET_LAST_ERROR(_errno__value_)      errno = (_errno__value_)
+    #define GET_LAST_ERROR()                    (errno)
+    #define SET_INVALID_INPUT()                 SET_LAST_ERROR(EINVAL)
 
   #endif
 

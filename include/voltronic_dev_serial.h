@@ -56,6 +56,7 @@
     const baud_rate_t baud_rate,
     const data_bits_t data_bits,
     const stop_bits_t stop_bits,
-    const serial_parity_t parity);
+    const serial_parity_t parity
+  );
 
 #endif
